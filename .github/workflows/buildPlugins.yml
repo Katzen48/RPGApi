@@ -26,7 +26,6 @@ jobs:
         with:
           arguments: publish
           gradle-version: 7.2
-          build-root-directory: plugin
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
