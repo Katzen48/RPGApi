@@ -7,7 +7,7 @@ import org.bukkit.entity.EntityType;
 
 @Getter
 @SuperBuilder
-public abstract class EntityCriterion {
+public abstract class EntityCriterion extends Criterion {
     /**
      * The exact entity id, of the entity
      */

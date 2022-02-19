@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class AdvancementDone {
+public class AdvancementDone extends Criterion {
     /**
      * The keys, of the advancements to be done. All are substitutes.
      */

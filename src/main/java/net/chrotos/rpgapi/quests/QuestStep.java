@@ -1,22 +1,26 @@
 package net.chrotos.rpgapi.quests;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
 
 import java.util.List;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class QuestStep {
+    /**
+     * The quest, this step is part of.
+     */
+    private Quest quest;
     /**
      * Level of this quest. If reached, quest becomes available.
      * When all required quests on this level are completed, the next level becomes available
      */
     private final int level;
     /**
-     * If this quest is required, to reach the next quest level
+     * If this quest is required, to complete the quest
      */
     private final boolean required;
     /**

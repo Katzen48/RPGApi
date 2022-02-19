@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class BlockPlacement {
+public class BlockPlacement extends Criterion {
     /**
      * The materials, of the block to be placed. All are substitutes.
      */

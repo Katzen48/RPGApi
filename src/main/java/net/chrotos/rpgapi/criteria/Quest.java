@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class Quest {
+public class Quest extends Criterion {
     /**
      * The id of the quest, that has to be achieved
      */

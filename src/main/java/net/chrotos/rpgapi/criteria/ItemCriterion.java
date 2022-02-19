@@ -10,7 +10,7 @@ import java.util.List;
 
 @Getter
 @SuperBuilder
-public abstract class ItemCriterion {
+public abstract class ItemCriterion extends Criterion {
     /**
      * The Display Name, of the item. All are substitutes.
      */

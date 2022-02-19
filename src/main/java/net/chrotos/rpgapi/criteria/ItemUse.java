@@ -5,9 +5,9 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-public class ItemPickup extends ItemCriterion {
+public class ItemUse extends ItemCriterion {
     /**
-     * The count, of items to be picked up. If not set, will be one.
+     * The count, of item usages. If not set, will be one.
      */
     private final Integer count = 1;
 }

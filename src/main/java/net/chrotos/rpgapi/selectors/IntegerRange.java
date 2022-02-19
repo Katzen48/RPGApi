@@ -9,7 +9,7 @@ public class IntegerRange {
     /**
      * The minimum value (additive to max)
      */
-    private final Integer min;
+    private final Integer min = 1;
     /**
      * THe maximum value (additive to min)
      */
