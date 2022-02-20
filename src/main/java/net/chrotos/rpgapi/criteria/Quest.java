@@ -2,10 +2,11 @@ package net.chrotos.rpgapi.criteria;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@SuperBuilder
+@RequiredArgsConstructor
 public class Quest extends Criterion {
     /**
      * The id of the quest, that has to be achieved
@@ -15,5 +16,6 @@ public class Quest extends Criterion {
     /**
      * The object instance of the required quest
      */
-    private final net.chrotos.rpgapi.quests.Quest quest;
+    @Setter
+    private net.chrotos.rpgapi.quests.Quest quest;
 }

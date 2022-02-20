@@ -3,12 +3,13 @@ package net.chrotos.rpgapi.criteria;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import lombok.experimental.SuperBuilder;
 import org.bukkit.Material;
 
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 public class BlockPlacement extends Criterion {
     /**
      * The materials, of the block to be placed. All are substitutes.

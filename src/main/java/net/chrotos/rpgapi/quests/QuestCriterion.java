@@ -3,7 +3,6 @@ package net.chrotos.rpgapi.quests;
 import lombok.Builder;
 import lombok.Getter;
 import net.chrotos.rpgapi.criteria.*;
-import net.chrotos.rpgapi.selectors.Location;
 
 /**
  * All Criteria have to be fulfilled, for the criterion to be fulfilled
