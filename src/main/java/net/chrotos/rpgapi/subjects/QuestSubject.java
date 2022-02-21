@@ -5,12 +5,14 @@ import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * This object may be updated asynchronously.
  * No return value should be cached anywhere and instead be re-fetched, as they are considered volatile.
  */
 public interface QuestSubject {
+    UUID getUniqueId();
     /**
      * Synchronized method
      * @return the current quest level. If all quests are completed, this is increased.

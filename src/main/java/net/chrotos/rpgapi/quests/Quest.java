@@ -34,13 +34,18 @@ public class Quest {
      */
     private final boolean announce;
     /**
-     * The title, to be shown. Supports translation keys.
+     * The title, to be shown on activation. Supports translation keys.
      */
     private final String title;
     /**
-     * The subtitle, to be shown. Supports translation keys.
+     * The subtitle, to be shown on activation. Supports translation keys.
      */
     private final String subTitle;
+    /**
+     * Level of this quest. If reached, quest becomes available.
+     * When all required quests on this level are completed, the next level becomes available
+     */
+    private final int level;
     /**
      * The steps for this quest
      */
