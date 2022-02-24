@@ -11,11 +11,14 @@ import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class QuestManager {
     private QuestGraph questGraph;
     private final Map<UUID, QuestSubject> subjectHashMap = Maps.newConcurrentMap();
+    @NonNull
+    private final Logger logger;
     @NonNull
     private final SubjectStorage subjectStorage;
     @NonNull
@@ -53,6 +56,7 @@ public class QuestManager {
     @Synchronized
     public QuestGraph getQuestGraph() {
         if (questGraph == null) {
+            logger.info("Generating Quest Graph");
             questGraph = QuestGraph.generate(loadQuests());
         }
 
@@ -61,12 +65,16 @@ public class QuestManager {
 
     @Synchronized
     public Quest loadQuest(@NonNull String id) {
+        logger.info("Loading Quest " + id);
+
         return configStorage.getQuest(id);
     }
 
     @Synchronized
     @NonNull
     public List<Quest> loadQuests() {
+        logger.info("Loading all Quests");
+
         return configStorage.getQuests();
     }
 }

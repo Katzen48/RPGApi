@@ -2,6 +2,7 @@ package net.chrotos.rpgapi.quests;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import net.chrotos.rpgapi.criteria.*;
 
 /**
@@ -11,9 +12,13 @@ import net.chrotos.rpgapi.criteria.*;
 @Builder
 public class QuestCriterion {
     /**
+     * The quest step, this criterion belongs to.
+     */
+    private QuestStep questStep;
+    /**
      * The quest, that has to be achieved, to fulfill this criterion. Will be checked upon quest activation.
      */
-    private final Quest quest;
+    private final net.chrotos.rpgapi.criteria.Quest quest;
     /**
      * The entity parameters, that have to be achieved, to fulfill this criterion
      */
@@ -42,4 +47,27 @@ public class QuestCriterion {
      * The advancement, to be completed. Will be checked upon quest activation.
      */
     private final AdvancementDone advancementDone;
+
+    protected void setQuestStep(@NonNull QuestStep questStep) {
+        assert this.questStep == null;
+
+        this.questStep = questStep;
+
+        setThisInstance(quest);
+        setThisInstance(entityKill);
+        setThisInstance(location);
+        setThisInstance(itemPickup);
+        setThisInstance(itemUse);
+        setThisInstance(blockPlacement);
+        setThisInstance(entityDamage);
+        setThisInstance(advancementDone);
+    }
+
+    private void setThisInstance(Criterion criterion) {
+        if (criterion == null) {
+            return;
+        }
+
+        criterion.setQuestCriterion(this);
+    }
 }

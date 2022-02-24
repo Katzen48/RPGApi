@@ -25,6 +25,13 @@ public class RPGPlugin extends JavaPlugin {
         net.chrotos.rpgapi.config.YamlStore configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
         configStorage.initialize();
 
-        questManager = new QuestManager(subjectStorage, configStorage);
+        questManager = new QuestManager(getLogger(), subjectStorage, configStorage);
+    }
+
+    @Override
+    public void onEnable() {
+        super.onEnable();
+
+        questManager.getQuestGraph();
     }
 }

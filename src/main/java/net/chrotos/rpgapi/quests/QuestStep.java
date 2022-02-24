@@ -1,25 +1,22 @@
 package net.chrotos.rpgapi.quests;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.Singular;
+import lombok.*;
 import net.chrotos.rpgapi.actions.Actions;
 
 import java.util.List;
 
 @Getter
-@RequiredArgsConstructor
+@Builder
 public class QuestStep {
     /**
      * The quest, this step is part of.
      */
-    @Setter
     private Quest quest;
     /**
-     * If this quest is required, to complete the quest
+     * If this quest is required, to complete the quest. Defaults to true.
      */
-    private final boolean required;
+    @Builder.Default
+    private final boolean required = true;
     /**
      * The Criteria for completing this quest step
      */
@@ -29,4 +26,13 @@ public class QuestStep {
      * The actions, to be executed after step completion.
      */
     private final Actions actions;
+
+    public void setQuest(@NonNull Quest quest) {
+        assert this.quest == null;
+
+        this.quest = quest;
+        for (QuestCriterion criterion : criteria) {
+            criterion.setQuestStep(this);
+        }
+    }
 }
