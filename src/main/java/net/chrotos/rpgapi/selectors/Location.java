@@ -7,9 +7,10 @@ import lombok.Getter;
 @Builder
 public class Location {
     /**
-     * The name of the world
+     * The name of the world. Defaults to "world"
      */
-    private final String world;
+    @Builder.Default
+    private final String world = "world";
     /**
      * The exact location (Enforced, when set)
      */

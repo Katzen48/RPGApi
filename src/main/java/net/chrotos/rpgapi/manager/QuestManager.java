@@ -58,6 +58,18 @@ public class QuestManager {
         if (questGraph == null) {
             logger.info("Generating Quest Graph");
             questGraph = QuestGraph.generate(loadQuests());
+
+            int levels = questGraph.getLevels().size();
+            int quests = questGraph.getLevels().stream().mapToInt(level -> level.getQuests().size()).sum();
+            int questSteps = questGraph.getLevels().stream().mapToInt(
+                            level -> level.getQuests().stream().mapToInt(quest -> quest.getSteps().size()).sum()).sum();
+            int questCriteria = questGraph.getLevels().stream().mapToInt(
+                    level -> level.getQuests().stream().mapToInt(
+                            quest -> quest.getSteps().stream().mapToInt(
+                                    step -> step.getCriteria().size()).sum()).sum()).sum();
+
+            logger.info(String.format("Quest Graph contains %d levels with %d quests with %d quest " +
+                                            "steps and %d quest criteria", levels, quests, questSteps, questCriteria));
         }
 
         return questGraph;

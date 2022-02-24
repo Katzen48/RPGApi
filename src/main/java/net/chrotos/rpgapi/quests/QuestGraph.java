@@ -37,6 +37,11 @@ public class QuestGraph {
             levels.add(new QuestLevel(level, Collections.unmodifiableList(levelQuests)));
         }
 
+        for (int i = 1; i < levels.size(); i++) {
+            levels.get(i).setPreviousLevel(levels.get(i - 1));
+            levels.get(i - 1).setNextLevel(levels.get(i));
+        }
+
         return new QuestGraph(Collections.unmodifiableList(levels));
     }
 }
