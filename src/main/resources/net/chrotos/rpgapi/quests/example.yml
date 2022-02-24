@@ -1,0 +1,117 @@
+name: Example Quest
+questTab: Tutorial
+hidden: false
+announce: true
+title: This is an example
+subTitle: Modify it for your own quests
+level: 0
+actions:
+  loots:
+  - displayName: Example End Portal Frame
+    material: END_PORTAL_FRAME
+    count:
+      min: 1
+      max: 10
+    durability: 0
+  - displayName: Example Dragon Egg
+    material: DRAGON_EGG
+    count:
+      min: 1
+      max: 10
+    durability: 0
+  lootTables:
+  - key: minecraft:chests/abandoned_mineshaft
+    lootingModifier: 10
+  experience:
+    min: 100
+    max: 10000
+  advancements:
+  - key: minecraft:end/dragon_breath
+  - key: minecraft:adventure/adventuring_time
+  title:
+    title: Finished the Example
+    subTitle: This is what a title could look like
+questSteps:
+  - required: true
+    actions:
+      lootTables:
+      - key: minecraft:chests/abandoned_mineshaft
+        lootingModifier: 10
+    criteria:
+    - quest:
+        id: tutorial
+      entityKill:
+        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1
+        entityType: HORSE
+        displayName: Daniel
+        location:
+          world: world
+          min:
+            x: 100
+            y: 100
+            z: 100
+          max:
+            x: 200
+            y: 200
+            z: 200
+          exact:
+            x: 150
+            y: 150
+            z: 150
+      location:
+        world: world
+        min:
+          x: 100
+          y: 100
+          z: 100
+        max:
+          x: 200
+          y: 200
+          z: 200
+        exact:
+          x: 150
+          y: 150
+          z: 150
+      itemPickup:
+        displayNames:
+        - Pickaxe
+        - Shovel
+        materials:
+        - DIAMOND_PICKAXE
+        - DIAMOND_SHOVEL
+        count: 10
+      itemUse:
+        displayNames:
+        - Pickaxe
+        - Shovel
+        materials:
+        - DIAMOND_PICKAXE
+        - DIAMOND_SHOVEL
+        count: 10
+      blockPlacement:
+        materials:
+        - WHITE_WOOL
+        - BLACK_WOOL
+        count: 10
+      entityDamage:
+        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1
+        entityType: HORSE
+        displayName: Daniel
+        location:
+          world: world
+          min:
+            x: 100
+            y: 100
+            z: 100
+          max:
+            x: 200
+            y: 200
+            z: 200
+          exact:
+            x: 150
+            y: 150
+            z: 150
+      advancementDone:
+        keys:
+        - minecraft:end/dragon_breath
+        - minecraft:adventure/adventuring_time

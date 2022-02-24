@@ -6,8 +6,9 @@ import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.serialization.config.YamlSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -33,18 +34,14 @@ public class YamlStore implements ConfigStorage {
     }
 
     public FileConfiguration getRaw(@NonNull String id) {
-        if (!questsFolder.exists()) {
-            questsFolder.mkdirs();
-        }
+        prepareNewDir();
 
         return YamlConfiguration.loadConfiguration(new File(questsFolder, id + ".yml"));
     }
 
     @Override
     public @NonNull List<String> getQuestIds() {
-        if (!questsFolder.exists()) {
-            questsFolder.mkdirs();
-        }
+        prepareNewDir();
 
         return Arrays.stream(Objects.requireNonNull(questsFolder.listFiles())).map(this::getIdFromFile)
                 .collect(Collectors.toList());
@@ -62,5 +59,27 @@ public class YamlStore implements ConfigStorage {
 
     private String getIdFromFile(@NonNull File file) {
         return Files.getNameWithoutExtension(file.getName());
+    }
+
+    private void prepareNewDir() {
+        if (questsFolder.exists()) {
+            return;
+        }
+
+        questsFolder.mkdirs();
+
+        try {
+            OutputStream out = new FileOutputStream(new File(questsFolder, "example.yml"));
+            InputStream in = getClass().getClassLoader().getResourceAsStream("net/chrotos/rpgapi/quests/example.yml");
+            byte[] buf = new byte[1024];
+            int len;
+            while ((len = in.read(buf)) > 0) {
+                out.write(buf, 0, len);
+            }
+            out.close();
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
