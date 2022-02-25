@@ -1,8 +1,10 @@
 package net.chrotos.rpgapi.subjects;
 
+import lombok.NonNull;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
+import net.chrotos.rpgapi.quests.QuestStep;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +14,9 @@ import java.util.UUID;
  * No return value should be cached anywhere and instead be re-fetched, as they are considered volatile.
  */
 public interface QuestSubject {
+    /**
+     * @return the uniqueId of this subject
+     */
     UUID getUniqueId();
     /**
      * Synchronized method
@@ -39,30 +44,44 @@ public interface QuestSubject {
 
     /**
      * Synchronized method
-     * @param advancement the advancement, to be awarded
+     * @param advancements the advancements, to be awarded
      */
-    void award(Advancement advancement);
+    void award(@NonNull Advancement... advancements);
 
     /**
      * Synchronized method
      * @param experience the experience, to be awarded
      */
-    void award(Experience experience);
+    void award(@NonNull Experience experience);
 
     /**
      * Synchronized method
-     * @param loot the loot, to be awarded
+     * @param loots the loot, to be awarded
+     * @throws IllegalStateException if the inventory is full
      */
-    void award(Loot loot);
+    void award(@NonNull Loot... loots) throws IllegalStateException;
 
     /**
      * Synchronized method
-     * @param lootTable the loot table, to be awarded
+     * @param lootTables the loot tables, to be awarded
      */
-    void award(LootTable lootTable);
+    void award(@NonNull LootTable... lootTables);
+
     /**
      * Synchronized method
      * @param title the title, to be shown
      */
-    void award(Title title);
+    void award(@NonNull Title title);
+
+    /**
+     * Synchronized method
+     * @param quest the quest to complete
+     */
+    void complete(@NonNull Quest quest);
+
+    /**
+     * Synchronized method
+     * @param questStep the quest step to complete
+     */
+    void complete(@NonNull QuestStep questStep);
 }

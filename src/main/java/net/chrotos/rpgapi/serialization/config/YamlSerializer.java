@@ -10,6 +10,7 @@ import net.chrotos.rpgapi.quests.QuestStep;
 import net.chrotos.rpgapi.selectors.IntegerRange;
 import net.chrotos.rpgapi.selectors.Location;
 import net.chrotos.rpgapi.selectors.LocationParameters;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -165,6 +166,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             Map<?, ?> advancementDone = (Map<?, ?>) section.get("advancementDone");
             AdvancementDone.AdvancementDoneBuilder advancementDoneBuilder = AdvancementDone.builder();
             for (String key : (List<String>) advancementDone.get("keys")) {
+                NamespacedKey advancementKey = NamespacedKey.fromString(key);
+                assert Bukkit.getAdvancement(advancementKey) != null;
                 advancementDoneBuilder.key(NamespacedKey.fromString(key));
             }
 
@@ -284,12 +287,19 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
     }
 
     private Advancement mapAdvancement(Map<?, ?> advancement) {
-        return new Advancement(NamespacedKey.fromString((String) advancement.get("key")));
+        NamespacedKey advancementKey = NamespacedKey.fromString((String) advancement.get("key"));
+        assert Bukkit.getAdvancement(advancementKey) != null;
+
+        return new Advancement(advancementKey);
     }
 
     private LootTable mapLootTable(Map<?, ?> lootTable) {
+        NamespacedKey lootTableKey = NamespacedKey.fromString((String) lootTable.get("key"));
+
+        assert Bukkit.getLootTable(lootTableKey) != null;
+
         LootTable.LootTableBuilder builder = LootTable.builder()
-                                                .key(NamespacedKey.fromString((String) lootTable.get("key")));
+                                                .key(lootTableKey);
 
         if (lootTable.containsKey("lootingModifier")) {
             builder.lootingModifier((Integer) lootTable.get("lootingModifier"));
@@ -318,13 +328,20 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         IntegerRange.IntegerRangeBuilder range = IntegerRange.builder();
 
         if (section != null) {
+            int min = 1;
+            int max = 1;
+
             if (section.containsKey("min")) {
-                range.min((Integer) section.get("min"));
+                min = (Integer) section.get("min");
             }
 
             if (section.containsKey("max")) {
-                range.max((Integer) section.get("max"));
+                max = (Integer) section.get("max");
+            } else {
+                max = min;
             }
+
+            range.min(min).max(max);
         }
 
         return range.build();

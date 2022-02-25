@@ -3,14 +3,18 @@ package net.chrotos.rpgapi.manager;
 import com.google.common.collect.Maps;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.Synchronized;
 import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
@@ -23,18 +27,45 @@ public class QuestManager {
     private final SubjectStorage subjectStorage;
     @NonNull
     private final ConfigStorage configStorage;
+    @Setter
+    private static Function<UUID, ? extends QuestSubject> subjectProvider;
 
+    @Synchronized
     public QuestSubject getQuestSubject(UUID uniqueId) {
-        return subjectHashMap.get(uniqueId);
+        return getQuestSubject(uniqueId, false);
     }
 
     @Synchronized
-    public void addQuestSubject(@NonNull QuestSubject questSubject) {
-        if (!subjectHashMap.containsKey(questSubject.getUniqueId())) {
-            subjectHashMap.put(questSubject.getUniqueId(), questSubject);
+    public QuestSubject getQuestSubject(UUID uniqueId, boolean elseCreate) {
+        if (subjectHashMap.containsKey(uniqueId)) {
+            return subjectHashMap.get(uniqueId);
+        } else {
+            QuestSubject subject = loadQuestSubject(uniqueId);
+
+            if (subject != null || !elseCreate) {
+                return subject;
+            }
+
+            return subjectProvider.apply(uniqueId);
+        }
+    }
+
+    @Synchronized
+    protected void addQuestSubject(@NonNull QuestSubject questSubject) {
+        if (subjectHashMap.containsKey(questSubject.getUniqueId())) {
+            return;
         }
 
-        throw new IllegalStateException("Quest Subject already exists");
+        subjectHashMap.put(questSubject.getUniqueId(), questSubject);
+    }
+
+    @Synchronized
+    protected void removeQuestSubject(@NonNull QuestSubject questSubject) {
+        if (!subjectHashMap.containsKey(questSubject.getUniqueId())) {
+            return;
+        }
+
+        subjectHashMap.remove(questSubject.getUniqueId());
     }
 
     @Synchronized
@@ -88,5 +119,16 @@ public class QuestManager {
         logger.info("Loading all Quests");
 
         return configStorage.getQuests();
+    }
+
+    @Synchronized
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        addQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
+    }
+
+    @Synchronized
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        saveQuestSubject(event.getPlayer().getUniqueId());
+        removeQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
     }
 }

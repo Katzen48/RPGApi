@@ -6,7 +6,6 @@ import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.serialization.config.YamlSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.util.Arrays;
