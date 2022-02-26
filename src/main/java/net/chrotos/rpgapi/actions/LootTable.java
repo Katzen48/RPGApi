@@ -7,7 +7,7 @@ import org.bukkit.NamespacedKey;
 
 @Getter
 @Builder
-public class LootTable implements Actionable {
+public class LootTable {
     /**
      * The namespaced key, of the loot table to be applied.
      */

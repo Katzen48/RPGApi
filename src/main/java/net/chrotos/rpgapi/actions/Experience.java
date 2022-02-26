@@ -6,6 +6,6 @@ import net.chrotos.rpgapi.selectors.IntegerRange;
 
 @Getter
 @SuperBuilder
-public class Experience extends IntegerRange implements Actionable {
+public class Experience extends IntegerRange {
 
 }

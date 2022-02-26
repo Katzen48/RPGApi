@@ -38,6 +38,19 @@ public class DefaultQuestSubject implements QuestSubject {
     }
 
     @Override
+    @NonNull
+    public String getName() {
+        return player.getName();
+    }
+
+    @Override
+    @Deprecated
+    @NonNull
+    public String getDisplayName() {
+        return player.getDisplayName();
+    }
+
+    @Override
     @Synchronized
     public void award(@NonNull Advancement... advancements) {
         for (Advancement advancement : advancements) {
@@ -94,6 +107,15 @@ public class DefaultQuestSubject implements QuestSubject {
     public void award(@NonNull Title title) {
         player.showTitle(net.kyori.adventure.title.Title.title(Component.text(title.getTitle()), // TODO: i18n
                                                                 Component.text(title.getSubTitle())));
+    }
+
+    @Override
+    public void award(@NonNull Command command) {
+        if (command.asServer()) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.format(this));
+        } else {
+            player.performCommand(command.format(this));
+        }
     }
 
     @Override

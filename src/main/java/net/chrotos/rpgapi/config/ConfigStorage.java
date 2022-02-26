@@ -5,7 +5,6 @@ import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.serialization.config.QuestSerializer;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Uses an implementation of {@link QuestSerializer} to load quests

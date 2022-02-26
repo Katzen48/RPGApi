@@ -32,4 +32,9 @@ public class Actions {
      * The title/subtitle, to be shown. This is additive.
      */
     private final Title title;
+    /**
+     * The commands, that should be executed
+     */
+    @Singular("command")
+    private final List<Command> commands;
 }

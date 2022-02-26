@@ -1,6 +1,9 @@
 package net.chrotos.rpgapi.quests;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
 
 import java.util.List;

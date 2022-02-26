@@ -13,8 +13,6 @@ import net.chrotos.rpgapi.selectors.LocationParameters;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 
@@ -281,6 +279,24 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
                 builder.title(titleBuilder.build());
             }
+
+            List<Map<?, ?>> commands = (List<Map<?,?>>) section.get("commands");
+            if (commands != null) {
+                for (int i = 0; i < commands.size(); i++) {
+                    builder.command(mapCommand(commands.get(i)));
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
+    private Command mapCommand(Map<?, ?> command) {
+        Command.CommandBuilder builder = Command.builder()
+                                                .command((String) command.get("command"));
+
+        if (command.containsKey("asServer")) {
+            builder.asServer((boolean) command.get("asServer"));
         }
 
         return builder.build();

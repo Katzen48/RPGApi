@@ -17,7 +17,22 @@ public interface QuestSubject {
     /**
      * @return the uniqueId of this subject
      */
+    @NonNull
     UUID getUniqueId();
+
+    /**
+     * @return the name of the player
+     */
+    @NonNull
+    String getName();
+
+    /**
+     * @return the display name of the player
+     */
+    @Deprecated
+    @NonNull
+    String getDisplayName();
+
     /**
      * Synchronized method
      * @return the current quest level. If all quests are completed, this is increased.
@@ -72,6 +87,12 @@ public interface QuestSubject {
      * @param title the title, to be shown
      */
     void award(@NonNull Title title);
+
+    /**
+     * Synchronized method
+     * @param command the command, to be executed
+     */
+    void award(@NonNull Command command);
 
     /**
      * Synchronized method

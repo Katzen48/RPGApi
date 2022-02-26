@@ -2,7 +2,6 @@ package net.chrotos.rpgapi;
 
 import lombok.Getter;
 import net.chrotos.rpgapi.manager.QuestManager;
-import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.plugin.ApiVersion;

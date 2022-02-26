@@ -3,8 +3,6 @@ package net.chrotos.rpgapi.listener;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.RPGPlugin;
-import net.chrotos.rpgapi.manager.QuestManager;
-import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;

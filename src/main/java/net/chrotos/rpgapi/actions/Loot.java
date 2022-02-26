@@ -8,7 +8,7 @@ import org.bukkit.Material;
 
 @Getter
 @Builder
-public class Loot implements Actionable {
+public class Loot {
     /**
      * The display name, of the items to be awarded.
      */

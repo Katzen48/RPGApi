@@ -1,20 +1,26 @@
+##################################################################
+#  This is a configuration example for a quest.                  #
+#  The maximum number of fields is included with descriptions.   #
+#  This is not a working quest.                                  #
+#  All fields are required unless they are stated as "Optional"  #
+##################################################################
+
 name: Example Quest # Name of the quest
 questTab: Tutorial # In which Tab of the quest menu the quest should be displayed
 hidden: false # If the quest should be hidden until it was completed
 announce: true # If an announcement in chat should be displayed upon completion
-title: This is an example # When the quest starts, this title will be displayed
-subTitle: Modify it for your own quests # The subtitle to the title
+title: This is an example # When the quest starts, this title will be displayed. Optional. Required if subTitle is set.
+subTitle: Modify it for your own quests # The subtitle to the title. Optional.
 level: 0 # In which level the quest is. The whole level has to be completed, in order for the next level to become available
-# The actions on quest-level describe things, that get executed after completion of the quest
-actions:
-  loots: # Items that should get distributed
+actions: # The actions on quest-level describe things, that get executed after completion of the quest
+  loots: # Items that should get distributed. Optional
   # Multiple items can be distributed. If the inventory is full, the items are lost
-  - displayName: Example End Portal Frame # The name of the item, that should be displayed to the user
-    material: END_PORTAL_FRAME # the Material see https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+  - displayName: Example End Portal Frame # The name of the item, that should be displayed to the user. One of displayName or material required.
+    material: END_PORTAL_FRAME # the Material see https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html. One of displayName or material required.
     count: # How many should be distributed
       min: 1 # Minimum count
-      max: 10 # Maximum count. If not provided, the minimum amount will be distributed. Else a random amount between min and max
-    durability: 0 # Deprecated. Durability of the item
+      max: 10 # Maximum count. If not provided, the minimum amount will be distributed. Else a random amount between min and max. Optional
+    durability: 0 # Deprecated. Durability of the item. Optional
   # Second item
   - displayName: Example Dragon Egg
     material: DRAGON_EGG
@@ -22,110 +28,113 @@ actions:
       min: 1
       max: 10
     durability: 0
-  lootTables: # Loot Tables, which should fill items into the players inventory
+  lootTables: # Loot Tables, which should fill items into the players inventory. Optional.
   # Multiple Loot Tables can be rolled
   - key: minecraft:chests/abandoned_mineshaft # Namespaced Key of the Loot Table
-    lootingModifier: 10 # Looting modifier. If not provided, the default modifier from the player's items is used
-  experience: # Experience, the player should get
+    lootingModifier: 10 # Looting modifier. If not provided, the default modifier from the player's items is used. Optional.
+  experience: # Experience, the player should get. Optional
     min: 100 # Minimum amount
-    max: 10000 # Maximum amount. If not provided, the minimum amount will be distributed. Else a random amount between min and max
-  advancements: # Advancements, that should be awarded to the player
+    max: 10000 # Maximum amount. If not provided, the minimum amount will be distributed. Else a random amount between min and max. Optional.
+  advancements: # Advancements, that should be awarded to the player. Optional
   # Multiple Advancements can be awarded
   - key: minecraft:end/dragon_breath # Namespaced Key of the Advancement
   - key: minecraft:adventure/adventuring_time
-  title: # A title, which should be shown to the player
+  title: # A title, which should be shown to the player. Optional.
     title: Finished the Example # The title line
-    subTitle: This is what a title could look like # The subtitle line
+    subTitle: This is what a title could look like # The subtitle line. Optional
+  commands: # Commands, that should be executed. Optional
+    - command: say Hi I am %player% # The command with placeholders. Available %player% (player name), %displayname% (display name of the player)
+      asServer: false # If the command should be executed as the server console. True, if not provided
 questSteps: # All steps, that this quest has. These are not sequentially evaluated but in parallel
   # Multiple quest steps may exist. All "required" steps have to be completed, for the quest to be completed.
   - required: true # If this step is required in order for the quest to be completable.
     actions: # All actions, that should be run after the completion of the step. Same structure as actions in quest
-      lootTables:
+      lootTables: # Optional
       - key: minecraft:chests/abandoned_mineshaft
-        lootingModifier: 10
+        lootingModifier: 10 # Optional
     criteria: # The criteria, that must be met for the step to be completed. All are additive and required.
     # Multiple criteria can exist
-    - quest: # This quest step requires another quest to be completed
+    - quest: # This quest step requires another quest to be completed.
         id: tutorial # ID of the quest. In general, this is the filename of the quest, without the file extension (.yml)
-      entityKill: # An entity must be killed, to complete this step
-        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity
-        entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html
-        displayName: Daniel # Name of the entity
-        location: # Location of the entity
+      entityKill: # An entity must be killed, to complete this step. Optional
+        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity. One of id, entityType, displayName or location is required.
+        entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html. One of id, entityType, displayName or location is required.
+        displayName: Daniel # Name of the entity. One of id, entityType, displayName or location is required.
+        location: # Location of the entity. One of id, entityType, displayName or location is required.
           world: world # World
-          min: # Lower edge
+          min: # Lower edge. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 100 # x-coordinate
             y: 100 # y-coordinate
             z: 100 # z-coordinate
-          max: # Upper edge
+          max: # Upper edge. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 200 # x-coordinate
             y: 200 # y-coordinate
             z: 200 # z-coordinate
-          exact: # the exact position
+          exact: # the exact position. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 150 # x-coordinate
             y: 150 # y-coordinate
             z: 150 # z-coordinate
-        count: 1 # How many entities have to be killed
-      location: # A location, the player has to walk to
+        count: 1 # How many entities have to be killed. If not provided, will be 1. Optional.
+      location: # A location, the player has to walk to. One of id, entityType, displayName or location is required. Optional.
         world: world # World
-        min: # Lower edge
+        min: # Lower edge. One of min, max or exact is required. Exact is not compatible with min and max.
           x: 100 # x-coordinate
           y: 100 # y-coordinate
           z: 100 # z-coordinate
-        max: # Upper edge
+        max: # Upper edge. One of min, max or exact is required. Exact is not compatible with min and max.
           x: 200 # x-coordinate
           y: 200 # y-coordinate
           z: 200 # z-coordinate
-        exact: # the exact position
+        exact: # the exact position. One of min, max or exact is required. Exact is not compatible with min and max.
           x: 150 # x-coordinate
           y: 150 # y-coordinate
           z: 150 # z-coordinate
-      itemPickup: # An item, the player has to pick up
-        displayNames: # The possible item names, that may be counted towards the completion
+      itemPickup: # An item, the player has to pick up. Optional.
+        displayNames: # The possible item names, that may be counted towards the completion. One of displayNames or materials is required.
         # Multiple strings are possible, all are alternatives
         - Pickaxe
         - Shovel
-        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html. One of displayNames or materials is required.
         # Multiple strings are possible, all are alternatives
         - DIAMOND_PICKAXE
         - DIAMOND_SHOVEL
-        count: 10 # The required count. All alternatives count towards that.
-      itemUse: # An item, the player has to use (right-click with)
-        displayNames: # The possible item names, that may be counted towards the completion
+        count: 10 # The required count. All alternatives count towards that. If not provided, will be 1. Optional.
+      itemUse: # An item, the player has to use (right-click with). Optional.
+        displayNames: # The possible item names, that may be counted towards the completion. One of displayNames or materials is required.
         # Multiple strings are possible, all are alternatives
         - Pickaxe
         - Shovel
-        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html. One of displayNames or materials is required.
         # Multiple strings are possible, all are alternatives
         - DIAMOND_PICKAXE
         - DIAMOND_SHOVEL
-        count: 10 # The required count of uses. All alternatives count towards that.
-      blockPlacement: # A block, that has to be placed by the player
+        count: 10 # The required count of uses. All alternatives count towards that. If not provided, will be 1. Optional.
+      blockPlacement: # A block, that has to be placed by the player. Optional.
         materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
         # Multiple strings are possible, all are alternatives
         - WHITE_WOOL
         - BLACK_WOOL
-        count: 10 # The required count of blocks, that have to be placed. All alternatives count towards that.
-      entityDamage: # An entity must be damaged, to complete this step
-        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity
-        entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html
-        displayName: Daniel # Name of the entity
-        location: # Location of the entity
+        count: 10 # The required count of blocks, that have to be placed. All alternatives count towards that. If not provided, will be 1. Optional.
+      entityDamage: # An entity must be damaged, to complete this step. Optional.
+        id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity. One of id, entityType, displayName or location is required.
+        entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html. One of id, entityType, displayName or location is required.
+        displayName: Daniel # Name of the entity. One of id, entityType, displayName or location is required.
+        location: # Location of the entity. One of id, entityType, displayName or location is required.
           world: world # World
-          min: # Lower edge
+          min: # Lower edge. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 100 # x-coordinate
             y: 100 # y-coordinate
             z: 100 # z-coordinate
-          max: # Upper edge
+          max: # Upper edge. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 200 # x-coordinate
             y: 200 # y-coordinate
             z: 200 # z-coordinate
-          exact: # the exact position
+          exact: # the exact position. One of min, max or exact is required. Exact is not compatible with min and max.
             x: 150 # x-coordinate
             y: 150 # y-coordinate
             z: 150 # z-coordinate
-        damage: 1 # How much damage has to be done
-      advancementDone: # Advancements have to be reached. This is also checked upon activation.
+        damage: 1 # How much damage has to be done. If not provided, will be 1. Optional.
+      advancementDone: # Advancements have to be reached. This is also checked upon activation. Optional.
         keys: # The namespaces keys of the Advancements
         # Multiple keys are possible. All are required
         - minecraft:end/dragon_breath
