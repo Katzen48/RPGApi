@@ -72,7 +72,7 @@ public class QuestManager {
 
     @Synchronized
     public QuestSubject loadQuestSubject(@NonNull UUID uniqueId) {
-        return subjectStorage.getSubject(uniqueId);
+        return subjectStorage.getSubject(uniqueId, questGraph);
     }
 
     @Synchronized

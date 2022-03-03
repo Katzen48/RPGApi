@@ -1,13 +1,16 @@
 package net.chrotos.rpgapi.datastorage;
 
 import lombok.NonNull;
+import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.serialization.data.SubjectSerializer;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class YamlStore implements SubjectStorage {
     @NonNull
@@ -23,22 +26,32 @@ public class YamlStore implements SubjectStorage {
     }
 
     @Override
-    public void initialize() {
+    public void initialize(@NonNull Function<UUID, QuestSubject> subjectFunction) {
         //this.subjectSerializer = new YamlSerializer(); //TODO: implement YamlSerializer
-        subjectSerializer.initialize(this);
+        subjectSerializer.initialize(this, subjectFunction);
     }
 
-    public FileConfiguration getRaw(@NonNull String id) {
+    public FileConfiguration getRaw(@NonNull String id, boolean create) {
         if (!subjectsFolder.exists()) {
             subjectsFolder.mkdirs();
         }
 
-        return YamlConfiguration.loadConfiguration(new File(subjectsFolder, id + ".yml"));
+        File file = new File(subjectsFolder, id + ".yml");
+
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return YamlConfiguration.loadConfiguration(file);
     }
 
     @Override
-    public QuestSubject getSubject(@NonNull UUID uniqueId) {
-        return subjectSerializer.getSubject(uniqueId);
+    public QuestSubject getSubject(@NonNull UUID uniqueId, @NonNull QuestGraph questGraph) {
+        return subjectSerializer.getSubject(uniqueId, questGraph);
     }
 
     @Override

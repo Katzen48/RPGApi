@@ -1,8 +1,6 @@
 package net.chrotos.rpgapi.subjects;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Synchronized;
+import lombok.*;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
@@ -27,9 +25,13 @@ public class DefaultQuestSubject implements QuestSubject {
     private final UUID uniqueId;
     @NonNull
     private final Player player;
+    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private QuestLevel level;
+    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private List<Quest> completedQuests;
+    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private List<Quest> activeQuests;
+    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private List<QuestProgress> questProgress;
 
     protected DefaultQuestSubject(@NonNull UUID uniqueId) {

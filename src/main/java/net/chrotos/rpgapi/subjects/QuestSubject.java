@@ -33,6 +33,11 @@ public interface QuestSubject {
     @NonNull
     String getDisplayName();
 
+    void setLevel(@NonNull QuestLevel questLevel);
+    void setCompletedQuests(@NonNull List<Quest> completedQuests);
+    void setActiveQuests(@NonNull List<Quest> activeQuests);
+    void setQuestProgress(@NonNull List<QuestProgress> questProgress);
+
     /**
      * Synchronized method
      * @return the current quest level. If all quests are completed, this is increased.

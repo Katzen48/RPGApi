@@ -15,6 +15,22 @@ import java.util.List;
 public class QuestGraph {
     private final List<QuestLevel> levels;
 
+    public QuestLevel getQuestLevel(int level) {
+        return levels.stream().filter(questLevel -> questLevel.getLevel() == level).findFirst().orElse(null);
+    }
+
+    public Quest getQuest(@NonNull String id) {
+        for (QuestLevel level : levels) {
+            for (Quest quest : level.getQuests()) {
+                if (quest.getId().equals(id)) {
+                    return quest;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static QuestGraph generate(@NonNull List<Quest> quests) {
         List<Quest> sortedQuests = Ordering.from(Comparator.comparingInt(Quest::getLevel)).sortedCopy(quests);
         List<QuestLevel> levels = Collections.synchronizedList(new ArrayList<>());
