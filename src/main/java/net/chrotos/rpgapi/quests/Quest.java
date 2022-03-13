@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
+import net.chrotos.rpgapi.actions.initialization.InitializationActions;
 
 import java.util.List;
 
@@ -55,4 +56,9 @@ public class Quest {
      * The actions, to be executed after quest completion.
      */
     private final Actions actions;
+
+    /**
+     * The actions, to be executed after activation or join
+     */
+    private final InitializationActions initializationActions;
 }

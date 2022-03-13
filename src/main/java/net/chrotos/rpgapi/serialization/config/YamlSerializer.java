@@ -2,6 +2,7 @@ package net.chrotos.rpgapi.serialization.config;
 
 import lombok.NonNull;
 import net.chrotos.rpgapi.actions.*;
+import net.chrotos.rpgapi.actions.initialization.InitializationActions;
 import net.chrotos.rpgapi.config.YamlStore;
 import net.chrotos.rpgapi.criteria.*;
 import net.chrotos.rpgapi.quests.Quest;
@@ -42,7 +43,9 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                             .title(config.getString("title"))
                             .subTitle(config.getString("subTitle"))
                             .level(config.getInt("level"))
-                            .actions(mapActions(config.getObject("actions", Map.class)));
+                            .actions(mapActions(config.getObject("actions", Map.class)))
+                            .initializationActions(mapInitializationActions(
+                                    config.getObject("initializationActions", Map.class)));
 
 
         List<Map<?, ?>> questSteps;
@@ -233,6 +236,26 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 .y((Integer) section.get("y"))
                 .z((Integer) section.get("z"))
                 .build();
+    }
+
+    private InitializationActions mapInitializationActions(Map<?, ?> section) {
+        Actions actions = mapActions(section);
+
+        InitializationActions.InitializationActionsBuilder builder = InitializationActions.builder()
+                                    .loots(actions.getLoots())
+                                    .lootTables(actions.getLootTables())
+                                    .advancements(actions.getAdvancements())
+                                    .commands(actions.getCommands());
+
+        if (actions.getExperience() != null) {
+            builder.experience(actions.getExperience());
+        }
+
+        if (actions.getTitle() != null) {
+            builder.title(actions.getTitle());
+        }
+
+        return builder.build();
     }
 
     private Actions mapActions(Map<?, ?> section) {

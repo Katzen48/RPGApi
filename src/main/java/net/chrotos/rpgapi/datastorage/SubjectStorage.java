@@ -12,7 +12,7 @@ import java.util.function.Function;
  * Uses an implementation of {@link SubjectSerializer} to load subjects
  */
 public interface SubjectStorage {
-    void initialize(@NonNull Function<UUID, QuestSubject> subjectFunction);
+    void initialize(@NonNull Function<UUID, ? extends QuestSubject> subjectFunction);
     QuestSubject getSubject(@NonNull UUID uniqueId, @NonNull QuestGraph questGraph);
     void saveSubject(@NonNull QuestSubject questSubject);
 }

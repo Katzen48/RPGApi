@@ -1,10 +1,7 @@
 package net.chrotos.rpgapi.manager;
 
 import com.google.common.collect.Maps;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import lombok.Synchronized;
+import lombok.*;
 import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
 import net.chrotos.rpgapi.quests.Quest;
@@ -12,6 +9,7 @@ import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +27,7 @@ public class QuestManager {
     private final SubjectStorage subjectStorage;
     @NonNull
     private final ConfigStorage configStorage;
+    @Getter
     @Setter
     private static Function<UUID, ? extends QuestSubject> subjectProvider;
 
@@ -124,12 +123,17 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        addQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
+    public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
+        QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId());
+        addQuestSubject(subject);
+
+        subject.getActiveQuests().stream()
+                                    .filter(quest -> !quest.getInitializationActions().isOnce())
+                                    .forEach(quest -> subject.award(quest.getInitializationActions()));
     }
 
     @Synchronized
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
         saveQuestSubject(event.getPlayer().getUniqueId());
         removeQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
     }

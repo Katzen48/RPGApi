@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import net.chrotos.rpgapi.quests.QuestCriterion;
+import net.chrotos.rpgapi.subjects.CriterionProgress;
 
 @Getter
 @Setter

@@ -12,6 +12,40 @@ announce: true # If an announcement in chat should be displayed upon completion
 title: This is an example # When the quest starts, this title will be displayed. Optional. Required if subTitle is set.
 subTitle: Modify it for your own quests # The subtitle to the title. Optional.
 level: 0 # In which level the quest is. The whole level has to be completed, in order for the next level to become available
+initializationActions: # The actions, to be executed upon join or quest activation
+  once: true # If the actions should only be executed upon first activation
+  loots: # Items that should get distributed. Optional
+  # Multiple items can be distributed. If the inventory is full, the items are lost
+  - displayName: Example End Portal Frame # The name of the item, that should be displayed to the user. One of displayName or material required.
+    material: END_PORTAL_FRAME # the Material see https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html. One of displayName or material required.
+    count: # How many should be distributed
+      min: 1 # Minimum count
+      max: 10 # Maximum count. If not provided, the minimum amount will be distributed. Else a random amount between min and max. Optional
+    durability: 0 # Deprecated. Durability of the item. Optional
+  # Second item
+  - displayName: Example Dragon Egg
+    material: DRAGON_EGG
+    count:
+      min: 1
+      max: 10
+    durability: 0
+  lootTables: # Loot Tables, which should fill items into the players inventory. Optional.
+    # Multiple Loot Tables can be rolled
+    - key: minecraft:chests/abandoned_mineshaft # Namespaced Key of the Loot Table
+      lootingModifier: 10 # Looting modifier. If not provided, the default modifier from the player's items is used. Optional.
+  experience: # Experience, the player should get. Optional
+    min: 100 # Minimum amount
+    max: 10000 # Maximum amount. If not provided, the minimum amount will be distributed. Else a random amount between min and max. Optional.
+  advancements: # Advancements, that should be awarded to the player. Optional
+    # Multiple Advancements can be awarded
+    - key: minecraft:end/dragon_breath # Namespaced Key of the Advancement
+    - key: minecraft:adventure/adventuring_time
+  title: # A title, which should be shown to the player. Optional.
+    title: Finished the Example # The title line
+    subTitle: This is what a title could look like # The subtitle line. Optional
+  commands: # Commands, that should be executed. Optional
+    - command: say Hi I am %player% # The command with placeholders. Available %player% (player name), %displayname% (display name of the player)
+      asServer: false # If the command should be executed as the server console. True, if not provided
 actions: # The actions on quest-level describe things, that get executed after completion of the quest
   loots: # Items that should get distributed. Optional
   # Multiple items can be distributed. If the inventory is full, the items are lost

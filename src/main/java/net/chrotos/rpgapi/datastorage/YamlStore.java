@@ -3,6 +3,7 @@ package net.chrotos.rpgapi.datastorage;
 import lombok.NonNull;
 import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.serialization.data.SubjectSerializer;
+import net.chrotos.rpgapi.serialization.data.YamlSerializer;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -15,7 +16,7 @@ import java.util.function.Function;
 public class YamlStore implements SubjectStorage {
     @NonNull
     private final File subjectsFolder;
-    private SubjectSerializer subjectSerializer;
+    private SubjectSerializer<YamlStore> subjectSerializer;
 
     public YamlStore(@NonNull File dataFolder) {
         if (!dataFolder.exists()) {
@@ -26,8 +27,8 @@ public class YamlStore implements SubjectStorage {
     }
 
     @Override
-    public void initialize(@NonNull Function<UUID, QuestSubject> subjectFunction) {
-        //this.subjectSerializer = new YamlSerializer(); //TODO: implement YamlSerializer
+    public void initialize(@NonNull Function<UUID, ? extends QuestSubject> subjectFunction) {
+        this.subjectSerializer = new YamlSerializer();
         subjectSerializer.initialize(this, subjectFunction);
     }
 

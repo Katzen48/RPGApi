@@ -14,10 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.loot.LootContext;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Getter(onMethod = @__(@Synchronized))
 public class DefaultQuestSubject implements QuestSubject {
@@ -132,31 +129,14 @@ public class DefaultQuestSubject implements QuestSubject {
         award(questStep.getActions());
     }
 
-    @Synchronized
-    private void award(Actions actions) {
-        if (actions == null) {
+    @Override
+    public void activate(@NonNull Quest quest) {
+        if (getActiveQuests().contains(quest)) {
             return;
         }
 
-        Loot[] loots = new Loot[actions.getLoots().size()];
-        actions.getLoots().toArray(loots);
-        award(loots);
-
-        LootTable[] lootTables = new LootTable[actions.getLootTables().size()];
-        actions.getLootTables().toArray(lootTables);
-        award(lootTables);
-
-        if (actions.getExperience() != null) {
-            award(actions.getExperience());
-        }
-
-        Advancement[] advancements = new Advancement[actions.getLootTables().size()];
-        actions.getAdvancements().toArray(advancements);
-        award(advancements);
-
-        if (actions.getTitle() != null) {
-            award(actions.getTitle());
-        }
+        award(quest.getInitializationActions());
+        getActiveQuests().add(quest);
     }
 
     public static DefaultQuestSubject create(@NonNull UUID uniqueId) {
@@ -164,6 +144,8 @@ public class DefaultQuestSubject implements QuestSubject {
     }
 
     static {
-        QuestManager.setSubjectProvider(DefaultQuestSubject::create);
+        if (QuestManager.getSubjectProvider() != null) {
+            QuestManager.setSubjectProvider(DefaultQuestSubject::create);
+        }
     }
 }

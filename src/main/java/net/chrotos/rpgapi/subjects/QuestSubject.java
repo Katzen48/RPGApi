@@ -1,6 +1,7 @@
 package net.chrotos.rpgapi.subjects;
 
 import lombok.NonNull;
+import lombok.Synchronized;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
@@ -101,6 +102,37 @@ public interface QuestSubject {
 
     /**
      * Synchronized method
+     * @param actions the actions to be executed
+     */
+    @Synchronized
+    default void award(Actions actions) {
+        if (actions == null) {
+            return;
+        }
+
+        Loot[] loots = new Loot[actions.getLoots().size()];
+        actions.getLoots().toArray(loots);
+        award(loots);
+
+        LootTable[] lootTables = new LootTable[actions.getLootTables().size()];
+        actions.getLootTables().toArray(lootTables);
+        award(lootTables);
+
+        if (actions.getExperience() != null) {
+            award(actions.getExperience());
+        }
+
+        Advancement[] advancements = new Advancement[actions.getLootTables().size()];
+        actions.getAdvancements().toArray(advancements);
+        award(advancements);
+
+        if (actions.getTitle() != null) {
+            award(actions.getTitle());
+        }
+    }
+
+    /**
+     * Synchronized method
      * @param quest the quest to complete
      */
     void complete(@NonNull Quest quest);
@@ -110,4 +142,10 @@ public interface QuestSubject {
      * @param questStep the quest step to complete
      */
     void complete(@NonNull QuestStep questStep);
+
+    /**
+     * Synchronized method
+     * @param quest the quest to activate
+     */
+    void activate(@NonNull Quest quest);
 }

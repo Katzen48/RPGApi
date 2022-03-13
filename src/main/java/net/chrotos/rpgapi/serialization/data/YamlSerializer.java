@@ -1,18 +1,17 @@
 package net.chrotos.rpgapi.serialization.data;
 
 import lombok.NonNull;
-import net.chrotos.rpgapi.datastorage.SubjectStorage;
+import net.chrotos.rpgapi.criteria.Criterion;
 import net.chrotos.rpgapi.datastorage.YamlStore;
-import net.chrotos.rpgapi.manager.QuestManager;
-import net.chrotos.rpgapi.quests.Quest;
-import net.chrotos.rpgapi.quests.QuestGraph;
-import net.chrotos.rpgapi.quests.QuestLevel;
-import net.chrotos.rpgapi.quests.QuestStep;
+import net.chrotos.rpgapi.quests.*;
+import net.chrotos.rpgapi.subjects.CriterionProgress;
+import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 
@@ -83,7 +82,69 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
             }
         }
 
-        return null; // TODO
+        List<QuestCriterion> completedQuestCriteria = Collections.synchronizedList(new ArrayList<>());
+        if (questProgress.containsKey("completedQuestCriteria")) {
+            List<Map<?, ?>> questCriteria = (List<Map<?, ?>>) questProgress.get("completedQuestCriteria");
+            for (int i = 0; i < questCriteria.size(); i++) {
+                completedQuestCriteria.add(mapQuestCriterion(questCriteria.get(i), quest));
+            }
+        }
+
+        List<Criterion> completedCriteria = Collections.synchronizedList(new ArrayList<>());
+        if (questProgress.containsKey("completedCriteria")) {
+            List<Map<?, ?>> criteria = (List<Map<?, ?>>) questProgress.get("completedCriteria");
+            for (int i = 0; i < criteria.size(); i++) {
+                completedCriteria.add(mapCriterion(criteria.get(i), quest));
+            }
+        }
+
+        List<CriterionProgress<? extends Criterion>> criterionProgresses = Collections.synchronizedList(new ArrayList<>());
+        if (questProgress.containsKey("criterionProgress")) {
+            List<Map<?, ?>> criterionProgress = (List<Map<?, ?>>) questProgress.get("criterionProgress");
+            for (int i = 0; i < criterionProgress.size(); i++) {
+                criterionProgresses.add(mapCriterionProgress(criterionProgress.get(i), quest));
+            }
+        }
+
+        return new QuestProgress(quest, completedSteps, completedQuestCriteria, completedCriteria, criterionProgresses);
+    }
+
+    private CriterionProgress<? extends Criterion> mapCriterionProgress(@NonNull Map<?,?> criterionProgress,
+                                                                        @NonNull Quest quest) {
+        Criterion criterion = mapCriterion(criterionProgress, quest);
+        if (criterionProgress.containsKey("integer")) {
+            return new IntegerCriterionProgress(criterion, (int) criterionProgress.get("integer"));
+        }
+
+        return null;
+    }
+
+    private Criterion mapCriterion(@NonNull Map<?,?> criterion, @NonNull Quest quest) {
+        QuestCriterion questCriterion = mapQuestCriterion(criterion, quest);
+        String type = (String) criterion.get("type");
+
+        try {
+            Field field = questCriterion.getClass().getDeclaredField(type);
+            field.setAccessible(true);
+            Object object = field.get(questCriterion);
+
+             if (! (object instanceof Criterion)) {
+                 throw new IllegalStateException(type + " is not a criterion");
+             }
+
+             return (Criterion) object;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private QuestCriterion mapQuestCriterion(@NonNull Map<?, ?> questCriterion, @NonNull Quest quest) {
+        QuestStep step = mapQuestStep((int) questCriterion.get("questStep"), quest);
+
+        return step.getCriteria().get((int) questCriterion.get("questCriterion"));
+
     }
 
     private QuestStep mapQuestStep(int questStep, @NonNull Quest quest) {

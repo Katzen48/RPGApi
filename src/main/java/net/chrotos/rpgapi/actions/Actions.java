@@ -3,11 +3,12 @@ package net.chrotos.rpgapi.actions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
 @Getter
-@Builder
+@SuperBuilder
 public class Actions {
     /**
      * The loot, to be awarded. This is additive.
