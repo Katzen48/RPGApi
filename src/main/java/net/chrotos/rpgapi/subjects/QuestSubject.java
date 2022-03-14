@@ -1,8 +1,8 @@
 package net.chrotos.rpgapi.subjects;
 
 import lombok.NonNull;
-import lombok.Synchronized;
 import net.chrotos.rpgapi.actions.*;
+import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 import net.chrotos.rpgapi.quests.QuestStep;
@@ -104,7 +104,6 @@ public interface QuestSubject {
      * Synchronized method
      * @param actions the actions to be executed
      */
-    @Synchronized
     default void award(Actions actions) {
         if (actions == null) {
             return;
@@ -147,5 +146,5 @@ public interface QuestSubject {
      * Synchronized method
      * @param quest the quest to activate
      */
-    void activate(@NonNull Quest quest);
+    void activate(@NonNull Quest quest, @NonNull QuestManager questManager);
 }

@@ -1,6 +1,7 @@
 package net.chrotos.rpgapi;
 
 import lombok.Getter;
+import net.chrotos.rpgapi.criteria.eventhandler.*;
 import net.chrotos.rpgapi.manager.QuestManager;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,7 +10,7 @@ import org.bukkit.plugin.java.annotation.plugin.LoadOrder;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 
-@Plugin(name = "RPGApi", version = "1.0-SNAPSHOT")
+@Plugin(name = "RPGApi", version = "1.18.1")
 @Author("Katzen48")
 @LoadOrder(PluginLoadOrder.STARTUP)
 @ApiVersion(ApiVersion.Target.v1_18)
@@ -35,5 +36,18 @@ public class RPGPlugin extends JavaPlugin {
         super.onEnable();
 
         questManager.getQuestGraph();
+    }
+
+    private void registerEventHandlers() {
+        getServer().getPluginManager().registerEvents(new AdvancementEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new BlockPlacementEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new EntityDamageEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new EntityKillEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new ItemPickupEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new ItemUseEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new LocationEventHandler(getQuestManager()), this);
+
+        InventoryChangeEventHandler.setQuestManager(getQuestManager());
+        getServer().getPluginManager().registerEvents(new InventoryChangeEventHandler(), this);
     }
 }

@@ -1,15 +1,18 @@
 package net.chrotos.rpgapi.criteria;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
 @Getter
 @SuperBuilder
-public abstract class ItemCriterion extends Criterion {
+public abstract class ItemCriterion extends Criterion implements Checkable<ItemStack> {
     /**
      * The Display Name, of the item. All are substitutes.
      */
@@ -20,4 +23,10 @@ public abstract class ItemCriterion extends Criterion {
      */
     @Singular("material")
     private final List<Material> materials;
+
+    @Override
+    public boolean check(@NonNull QuestSubject subject, ItemStack object) {
+        return (displayNames.isEmpty() || displayNames.contains(object.getItemMeta().getDisplayName())) &&
+                (materials.isEmpty() || materials.contains(object.getType()));
+    }
 }

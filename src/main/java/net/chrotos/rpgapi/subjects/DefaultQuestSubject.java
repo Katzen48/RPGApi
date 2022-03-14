@@ -130,13 +130,16 @@ public class DefaultQuestSubject implements QuestSubject {
     }
 
     @Override
-    public void activate(@NonNull Quest quest) {
+    public void activate(@NonNull Quest quest, @NonNull QuestManager questManager) {
         if (getActiveQuests().contains(quest)) {
             return;
         }
 
         award(quest.getInitializationActions());
         getActiveQuests().add(quest);
+
+        // TODO check if required quests have already been completed. Refactoring required
+        questManager.checkCompletance(this, net.chrotos.rpgapi.criteria.Quest.class, null);
     }
 
     public static DefaultQuestSubject create(@NonNull UUID uniqueId) {

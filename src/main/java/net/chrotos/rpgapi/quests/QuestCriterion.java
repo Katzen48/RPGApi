@@ -47,6 +47,10 @@ public class QuestCriterion {
      * The advancement, to be completed. Will be checked upon quest activation.
      */
     private final AdvancementDone advancementDone;
+    /**
+     * The item, that has to be added to the inventory
+     */
+    private final Inventory inventory;
 
     protected void setQuestStep(@NonNull QuestStep questStep) {
         assert this.questStep == null;

@@ -4,10 +4,11 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import net.chrotos.rpgapi.subjects.QuestSubject;
 
 @Getter
 @RequiredArgsConstructor
-public class Quest extends Criterion {
+public class Quest extends Criterion implements Checkable<net.chrotos.rpgapi.quests.Quest> {
     /**
      * The id of the quest, that has to be achieved
      */
@@ -18,4 +19,14 @@ public class Quest extends Criterion {
      */
     @Setter
     private net.chrotos.rpgapi.quests.Quest quest;
+
+
+    @Override
+    public boolean check(@NonNull QuestSubject subject, net.chrotos.rpgapi.quests.Quest object) {
+        if (object != null) {
+            return object == quest;
+        }
+
+        return subject.getCompletedQuests().contains(quest);
+    }
 }

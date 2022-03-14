@@ -11,6 +11,7 @@ import net.chrotos.rpgapi.quests.QuestStep;
 import net.chrotos.rpgapi.selectors.IntegerRange;
 import net.chrotos.rpgapi.selectors.Location;
 import net.chrotos.rpgapi.selectors.LocationParameters;
+import net.chrotos.rpgapi.selectors.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -50,10 +51,10 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         List<Map<?, ?>> questSteps;
         if (!config.contains("questSteps") || (questSteps = config.getMapList("questSteps")).size() < 1) {
-            throw new IllegalStateException(String.format("For %s quest were no questSteps defined.", id));
+            throw new IllegalStateException(String.format("For quest %s were no questSteps defined.", id));
         }
-        for (int i = 0; i < questSteps.size(); i++) {
-            builder.step(mapQuestStep(questSteps.get(i), id));
+        for (Map<?, ?> step : questSteps) {
+            builder.step(mapQuestStep(step, id));
         }
 
         Quest quest = builder.build();
@@ -71,12 +72,17 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
     private QuestStep mapQuestStep(@NonNull Map<?, ?> section, @NonNull String id) {
         QuestStep.QuestStepBuilder builder = QuestStep.builder()
-                                .required(section.containsKey("required") ? (boolean) section.get("required") : true)
+                                .required(!section.containsKey("required") || (boolean) section.get("required"))
                                 .actions(mapActions((Map<?, ?>) section.get("actions")));
 
         List<Map<?, ?>> criteria = (List<Map<?, ?>>) section.get("criteria");
-        for (int i = 0; i < criteria.size(); i++) {
-            builder.criterion(mapQuestCriterion(criteria.get(i), id));
+
+        if (criteria.size() < 1) {
+            throw new IllegalStateException(String.format("At least one quest step of quest %s comes with a quest criterion", id));
+        }
+
+        for (Map<?, ?> criterion : criteria) {
+            builder.criterion(mapQuestCriterion(criterion, id));
         }
 
         return builder.build();
@@ -97,7 +103,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("entityKill")) {
             Map<?, ?> entityKill = (Map<?, ?>) section.get("entityKill");
-            EntityKill.EntityKillBuilder entityKillBuilder = EntityKill.builder();
+            EntityKill.EntityKillBuilder<?, ?> entityKillBuilder = EntityKill.builder();
             entityKillBuilder.id((String) entityKill.get("id"));
             entityKillBuilder.type(entityKill.containsKey("entityType") ?
                     EntityType.valueOf((String) entityKill.get("entityType")) : null);
@@ -114,7 +120,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("itemPickup")) {
             Map<?, ?> itemPickup = (Map<?, ?>) section.get("itemPickup");
-            ItemPickup.ItemPickupBuilder itemPickupBuilder = ItemPickup.builder();
+            ItemPickup.ItemPickupBuilder<?, ?> itemPickupBuilder = ItemPickup.builder();
             for (String displayName : (List<String>) itemPickup.get("displayNames")) {
                 itemPickupBuilder.displayName(displayName);
             }
@@ -128,7 +134,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("itemUse")) {
             Map<?, ?> itemUse = (Map<?, ?>) section.get("itemUse");
-            ItemUse.ItemUseBuilder itemUseBuilder = ItemUse.builder();
+            ItemUse.ItemUseBuilder<?, ?> itemUseBuilder = ItemUse.builder();
             for (String displayName : (List<String>) itemUse.get("displayNames")) {
                 itemUseBuilder.displayName(displayName);
             }
@@ -142,7 +148,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("blockPlacement")) {
             Map<?, ?> blockPlacement = (Map<?, ?>) section.get("blockPlacement");
-            BlockPlacement.BlockPlacementBuilder blockPlacementBuilder = BlockPlacement.builder();
+            BlockPlacement.BlockPlacementBuilder<?, ?> blockPlacementBuilder = BlockPlacement.builder();
             for (String material : (List<String>) blockPlacement.get("materials")) {
                 blockPlacementBuilder.material(Material.getMaterial(material));
             }
@@ -153,7 +159,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("entityDamage")) {
             Map<?, ?> entityDamage = (Map<?, ?>) section.get("entityDamage");
-            EntityDamage.EntityDamageBuilder entityDamageBuilder = EntityDamage.builder();
+            EntityDamage.EntityDamageBuilder<?, ?> entityDamageBuilder = EntityDamage.builder();
             entityDamageBuilder.id((String) entityDamage.get("id"));
             entityDamageBuilder.type(entityDamage.containsKey("entityType") ?
                     EntityType.valueOf((String) entityDamage.get("entityType")) : null);
@@ -165,7 +171,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
         if (section.containsKey("advancementDone")) {
             Map<?, ?> advancementDone = (Map<?, ?>) section.get("advancementDone");
-            AdvancementDone.AdvancementDoneBuilder advancementDoneBuilder = AdvancementDone.builder();
+            AdvancementDone.AdvancementDoneBuilder<?, ?> advancementDoneBuilder = AdvancementDone.builder();
             for (String key : (List<String>) advancementDone.get("keys")) {
                 NamespacedKey advancementKey = NamespacedKey.fromString(key);
                 assert Bukkit.getAdvancement(advancementKey) != null;
@@ -175,11 +181,47 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             builder.advancementDone(advancementDoneBuilder.build());
         }
 
+        if (section.containsKey("inventory")) {
+            Map<?, ?> inventory = (Map<?, ?>) section.get("inventory");
+            Inventory.InventoryBuilder<?, ?> inventoryBuilder = Inventory.builder();
+            for (String displayName : (List<String>) inventory.get("displayNames")) {
+                inventoryBuilder.displayName(displayName);
+            }
+            for (String material : (List<String>) inventory.get("materials")) {
+                inventoryBuilder.material(Material.getMaterial(material));
+            }
+            inventoryBuilder.count(inventory.containsKey("count") ? (int) inventory.get("count") : 1);
+
+            if (inventory.containsKey("player")) {
+                inventoryBuilder.player(mapPlayerSelector((Map<?, ?>) inventory.get("player")));
+            }
+
+            builder.inventory(inventoryBuilder.build());
+        }
+
+        return builder.build();
+    }
+
+    private Player mapPlayerSelector(@NonNull Map<?, ?> section) {
+        Player.PlayerBuilder builder = Player.builder();
+
+        if (section.containsKey("id")) {
+            builder.id((String) section.get("id"));
+        }
+
+        if (section.containsKey("name")) {
+            builder.name((String) section.get("name"));
+        }
+
+        if (section.containsKey("location")) {
+            builder.location(mapLocationSelector((Map<?, ?>) section.get("location")));
+        }
+
         return builder.build();
     }
 
     private net.chrotos.rpgapi.criteria.Location mapLocationCriterion(@NonNull Map<?, ?> section) {
-        net.chrotos.rpgapi.criteria.Location.LocationBuilder builder = net.chrotos.rpgapi.criteria.Location.builder();
+        net.chrotos.rpgapi.criteria.Location.LocationBuilder<?, ?> builder = net.chrotos.rpgapi.criteria.Location.builder();
 
         builder.world(section.containsKey("world") ? (String) section.get("world") : "world");
 
@@ -259,20 +301,20 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
     }
 
     private Actions mapActions(Map<?, ?> section) {
-        Actions.ActionsBuilder builder = Actions.builder();
+        Actions.ActionsBuilder<?, ?> builder = Actions.builder();
 
         if (section != null) {
             List<Map<?, ?>> loots = (List<Map<?, ?>>) section.get("loots");
             if (loots != null) {
-                for (int i = 0; i < loots.size(); i++) {
-                    builder.loot(mapLoot(loots.get(i)));
+                for (Map<?, ?> loot : loots) {
+                    builder.loot(mapLoot(loot));
                 }
             }
 
             List<Map<?, ?>> lootTables = (List<Map<?, ?>>) section.get("lootTables");
             if (lootTables != null) {
-                for (int i = 0; i < lootTables.size(); i++) {
-                    builder.lootTable(mapLootTable(lootTables.get(i)));
+                for (Map<?, ?> lootTable : lootTables) {
+                    builder.lootTable(mapLootTable(lootTable));
                 }
             }
 
@@ -283,8 +325,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
             List<Map<?, ?>> advancements = (List<Map<?, ?>>) section.get("advancements");
             if (advancements != null) {
-                for (int i = 0; i < advancements.size(); i++) {
-                    builder.advancement(mapAdvancement(advancements.get(i)));
+                for (Map<?, ?> advancement : advancements) {
+                    builder.advancement(mapAdvancement(advancement));
                 }
             }
 
@@ -305,8 +347,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
             List<Map<?, ?>> commands = (List<Map<?,?>>) section.get("commands");
             if (commands != null) {
-                for (int i = 0; i < commands.size(); i++) {
-                    builder.command(mapCommand(commands.get(i)));
+                for (Map<?, ?> command : commands) {
+                    builder.command(mapCommand(command));
                 }
             }
         }
@@ -364,11 +406,11 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
     }
 
     private IntegerRange mapIntegerRange(Map<?, ?> section) {
-        IntegerRange.IntegerRangeBuilder range = IntegerRange.builder();
+        IntegerRange.IntegerRangeBuilder<?, ?> range = IntegerRange.builder();
 
         if (section != null) {
             int min = 1;
-            int max = 1;
+            int max;
 
             if (section.containsKey("min")) {
                 min = (Integer) section.get("min");
