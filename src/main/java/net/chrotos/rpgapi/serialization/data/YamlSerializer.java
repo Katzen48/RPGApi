@@ -1,72 +1,62 @@
 package net.chrotos.rpgapi.serialization.data;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.criteria.Criterion;
 import net.chrotos.rpgapi.datastorage.YamlStore;
+import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.*;
 import net.chrotos.rpgapi.subjects.CriterionProgress;
 import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
 
+@RequiredArgsConstructor
 public class YamlSerializer implements SubjectSerializer<YamlStore> {
-    private YamlStore subjectStorage;
-    private Function<UUID, ? extends QuestSubject> subjectFunction;
-
-    @Override
-    public void initialize(@NotNull YamlStore subjectStorage, @NonNull Function<UUID, ? extends QuestSubject> subjectFunction) {
-        this.subjectStorage = subjectStorage;
-        this.subjectFunction = subjectFunction;
-    }
+    private final YamlStore subjectStorage;
 
     @Override
     public QuestSubject getSubject(@NonNull UUID uniqueId, @NonNull QuestGraph questGraph) {
         FileConfiguration config = subjectStorage.getRaw(uniqueId.toString(), true);
-        QuestSubject subject = subjectFunction.apply(uniqueId);
+        QuestSubject subject = QuestManager.getSubjectProvider().apply(uniqueId);
+
+        subject.setQuestProgress(Collections.synchronizedList(new ArrayList<>()));
+        subject.setActiveQuests(Collections.synchronizedList(new ArrayList<>()));
+        subject.setCompletedQuests(Collections.synchronizedList(new ArrayList<>()));
 
         if (!config.contains("level") || !config.contains("completed") || !config.contains("active")
                 || !config.contains("progress")) {
+
             return subject;
         }
 
         QuestLevel level = questGraph.getQuestLevel(config.getInt("level"));
         subject.setLevel(level);
 
-        List<Quest> completedQuests = Collections.synchronizedList(new ArrayList<>());
         for (String questId : config.getStringList("completed")) {
             Quest quest = questGraph.getQuest(questId);
 
             if (quest != null) {
-                completedQuests.add(quest);
+                subject.getCompletedQuests().add(quest);
             }
         }
-        subject.setCompletedQuests(completedQuests);
 
-        List<Quest> activeQuests = Collections.synchronizedList(new ArrayList<>());
         for (String questId : config.getStringList("active")) {
             Quest quest = questGraph.getQuest(questId);
 
             if (quest != null) {
-                activeQuests.add(quest);
+                subject.getActiveQuests().add(quest);
             }
         }
-        subject.setActiveQuests(activeQuests);
 
-        List<QuestProgress> questProgress = Collections.synchronizedList(new ArrayList<>());
         for (Map<?, ?> progress : config.getMapList("progress")) {
             QuestProgress progressInstance = mapQuestProgress(progress, questGraph);
-
-            if (progressInstance != null) {
-                questProgress.add(progressInstance);
-            }
+            subject.getQuestProgress().add(progressInstance);
         }
-        subject.setQuestProgress(questProgress);
 
         return subject;
     }
@@ -75,12 +65,16 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         Quest quest = questGraph.getQuest((String) questProgress.get("quest"));
         assert quest != null;
 
+        QuestProgress.QuestProgressBuilder builder = QuestProgress.builder();
+        builder.quest(quest);
+
         List<QuestStep> completedSteps = Collections.synchronizedList(new ArrayList<>());
         if (questProgress.containsKey("completedSteps")) {
             for (int step : (List<Integer>) questProgress.get("completedSteps")) {
                 completedSteps.add(mapQuestStep(step, quest));
             }
         }
+        builder.completedSteps(completedSteps);
 
         List<QuestCriterion> completedQuestCriteria = Collections.synchronizedList(new ArrayList<>());
         if (questProgress.containsKey("completedQuestCriteria")) {
@@ -89,6 +83,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
                 completedQuestCriteria.add(mapQuestCriterion(questCriteria.get(i), quest));
             }
         }
+        builder.completedQuestCriteria(completedQuestCriteria);
 
         List<Criterion> completedCriteria = Collections.synchronizedList(new ArrayList<>());
         if (questProgress.containsKey("completedCriteria")) {
@@ -97,6 +92,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
                 completedCriteria.add(mapCriterion(criteria.get(i), quest));
             }
         }
+        builder.completedCriteria(completedCriteria);
 
         List<CriterionProgress<? extends Criterion>> criterionProgresses = Collections.synchronizedList(new ArrayList<>());
         if (questProgress.containsKey("criterionProgress")) {
@@ -105,8 +101,9 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
                 criterionProgresses.add(mapCriterionProgress(criterionProgress.get(i), quest));
             }
         }
+        builder.criterionProgresses(criterionProgresses);
 
-        return new QuestProgress(quest, completedSteps, completedQuestCriteria, completedCriteria, criterionProgresses);
+        return builder.build();
     }
 
     private CriterionProgress<? extends Criterion> mapCriterionProgress(@NonNull Map<?,?> criterionProgress,
@@ -153,6 +150,97 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
 
     @Override
     public void saveSubject(@NonNull QuestSubject questSubject) {
+        FileConfiguration config = subjectStorage.getRaw(questSubject.getUniqueId().toString(), true);
 
+        QuestLevel level = questSubject.getLevel();
+        config.set("level", level != null ? level.getLevel() : null);
+
+        List<String> completed = new ArrayList<>();
+        questSubject.getCompletedQuests().forEach(quest -> completed.add(quest.getId()));
+        config.set("completed", completed);
+
+        List<String> active = new ArrayList<>();
+        questSubject.getActiveQuests().forEach(quest -> active.add(quest.getId()));
+        config.set("active", active);
+
+        // Quest Progress
+        List<Map<?, ?>> progress = new ArrayList<>();
+        questSubject.getQuestProgress().forEach(questProgress -> {
+            Map<String, Object> map = new HashMap<>();
+
+            map.put("quest", questProgress.getQuest().getId());
+
+            // Completed Steps
+            List<Integer> completedSteps = new ArrayList<>();
+            questProgress.getCompletedSteps().forEach(step -> {
+                completedSteps.add(questProgress.getQuest().getSteps().indexOf(step));
+            });
+            map.put("completedSteps", completedSteps);
+
+            // Completed Quest Criteria
+            List<Map<?, ?>> completedQuestCriteria = new ArrayList<>();
+            questProgress.getCompletedQuestCriteria().forEach(criterion -> {
+                Map<String, Object> criterionMap = new HashMap<>();
+
+                criterionMap.put("questStep", criterion.getQuestStep().getQuest()
+                                                .getSteps().indexOf(criterion.getQuestStep()));
+
+                criterionMap.put("questCriterion", criterion.getQuestStep().getCriteria().indexOf(criterion));
+
+                completedQuestCriteria.add(criterionMap);
+            });
+            map.put("completedQuestCriteria", completedQuestCriteria);
+
+            // Completed Criteria
+            List<Map<?, ?>> completedCriteria = new ArrayList<>();
+            questProgress.getCompletedCriteria().forEach(criterion -> {
+                Map<String, Object> criterionMap = new HashMap<>();
+
+                criterionMap.put("questStep", criterion.getQuestCriterion().getQuestStep().getQuest()
+                        .getSteps().indexOf(criterion.getQuestCriterion().getQuestStep()));
+
+                criterionMap.put("questCriterion", criterion.getQuestCriterion().getQuestStep().getCriteria()
+                        .indexOf(criterion.getQuestCriterion()));
+
+                criterionMap.put("type", Arrays.stream(criterion.getQuestCriterion().getClass().getDeclaredFields())
+                        .filter(field -> field.getType().isAssignableFrom(criterion.getClass()))
+                        .findFirst().get().getName());
+
+                completedCriteria.add(criterionMap);
+            });
+            map.put("completedCriteria", completedCriteria);
+
+            List<Map<?, ?>> criterionProgresses = new ArrayList<>();
+            questProgress.getCriterionProgresses().forEach(criterionProgress -> {
+                Map<String, Object> progressMap = new HashMap<>();
+
+                progressMap.put("questStep", criterionProgress.getCriterion().getQuestCriterion().getQuestStep()
+                        .getQuest().getSteps().indexOf(
+                                criterionProgress.getCriterion().getQuestCriterion().getQuestStep()));
+
+                progressMap.put("questCriterion", criterionProgress.getCriterion().getQuestCriterion()
+                            .getQuestStep().getCriteria()
+                        .indexOf(criterionProgress.getCriterion().getQuestCriterion()));
+
+                progressMap.put("type", Arrays.stream(criterionProgress.getCriterion().getQuestCriterion().getClass()
+                        .getFields()).filter(field -> field.getType()
+                            .isAssignableFrom(criterionProgress.getCriterion().getClass()))
+                        .findFirst().get().getName());
+
+                if (criterionProgress instanceof IntegerCriterionProgress) {
+                    progressMap.put("integer", ((IntegerCriterionProgress)criterionProgress).getValue());
+                } else {
+                    throw new IllegalStateException(criterionProgress.getClass().getName() + " is not serializable");
+                }
+
+                criterionProgresses.add(progressMap);
+            });
+            map.put("criterionProgress", criterionProgresses);
+
+            progress.add(map);
+        });
+        config.set("progress", progress);
+
+        subjectStorage.save(config, questSubject.getUniqueId().toString());
     }
 }

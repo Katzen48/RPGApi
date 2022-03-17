@@ -1,6 +1,5 @@
 package net.chrotos.rpgapi.actions;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;

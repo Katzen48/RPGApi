@@ -5,6 +5,7 @@ import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.advancement.Advancement;
 
@@ -20,7 +21,12 @@ public class AdvancementDone extends Criterion implements Checkable<Advancement>
     private final List<NamespacedKey> keys;
 
     @Override
-    public boolean check(@NonNull QuestSubject subject, @NonNull Advancement advancement) {
-        return keys.contains(advancement.getKey());
+    public boolean check(@NonNull QuestSubject subject, Advancement advancement) {
+        if (advancement != null) {
+            return keys.contains(advancement.getKey());
+        }
+
+        return keys.stream().anyMatch(
+                key -> Bukkit.getPlayer(subject.getUniqueId()).getAdvancementProgress(Bukkit.getAdvancement(key)).isDone());
     }
 }

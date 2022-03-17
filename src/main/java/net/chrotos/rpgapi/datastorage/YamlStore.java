@@ -11,12 +11,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.function.Function;
 
 public class YamlStore implements SubjectStorage {
     @NonNull
     private final File subjectsFolder;
-    private SubjectSerializer<YamlStore> subjectSerializer;
+    private final SubjectSerializer<YamlStore> subjectSerializer = new YamlSerializer(this);
 
     public YamlStore(@NonNull File dataFolder) {
         if (!dataFolder.exists()) {
@@ -26,20 +25,13 @@ public class YamlStore implements SubjectStorage {
         this.subjectsFolder = new File(dataFolder.getAbsolutePath(), "subjects");
     }
 
-    @Override
-    public void initialize(@NonNull Function<UUID, ? extends QuestSubject> subjectFunction) {
-        this.subjectSerializer = new YamlSerializer();
-        subjectSerializer.initialize(this, subjectFunction);
-    }
-
     public FileConfiguration getRaw(@NonNull String id, boolean create) {
         if (!subjectsFolder.exists()) {
             subjectsFolder.mkdirs();
         }
 
         File file = new File(subjectsFolder, id + ".yml");
-
-        if (!file.exists()) {
+        if (!file.exists() && create) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
@@ -48,6 +40,27 @@ public class YamlStore implements SubjectStorage {
         }
 
         return YamlConfiguration.loadConfiguration(file);
+    }
+
+    public void save(@NonNull FileConfiguration configuration, @NonNull String id) {
+        if (!subjectsFolder.exists()) {
+            subjectsFolder.mkdirs();
+        }
+
+        File file = new File(subjectsFolder, id + ".yml");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            configuration.save(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

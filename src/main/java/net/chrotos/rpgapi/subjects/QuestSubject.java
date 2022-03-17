@@ -49,18 +49,21 @@ public interface QuestSubject {
      * Synchronized method
      * @return all quests, that have been completed. Is used for resolution, if the quest level should be increased
      */
+    @NonNull
     List<Quest> getCompletedQuests();
 
     /**
      * Synchronized method
      * @return all quests, that are actively been tracked.
      */
+    @NonNull
     List<Quest> getActiveQuests();
 
     /**
      * Synchronized method
      * @return progress, of not yet completed quests. Upon quest completion, these values are removed.
      */
+    @NonNull
     List<QuestProgress> getQuestProgress();
 
     /**
@@ -121,13 +124,15 @@ public interface QuestSubject {
             award(actions.getExperience());
         }
 
-        Advancement[] advancements = new Advancement[actions.getLootTables().size()];
+        Advancement[] advancements = new Advancement[actions.getAdvancements().size()];
         actions.getAdvancements().toArray(advancements);
         award(advancements);
 
         if (actions.getTitle() != null) {
             award(actions.getTitle());
         }
+
+        actions.getCommands().forEach(this::award);
     }
 
     /**

@@ -12,8 +12,8 @@ announce: true # If an announcement in chat should be displayed upon completion
 title: This is an example # When the quest starts, this title will be displayed. Optional. Required if subTitle is set.
 subTitle: Modify it for your own quests # The subtitle to the title. Optional.
 level: 0 # In which level the quest is. The whole level has to be completed, in order for the next level to become available
-initializationActions: # The actions, to be executed upon join or quest activation
-  once: true # If the actions should only be executed upon first activation
+initializationActions: # The actions, to be executed upon join or quest activation. These are optional.
+  once: true # If the actions should only be executed upon first activation. Defaults to true
   loots: # Items that should get distributed. Optional
   # Multiple items can be distributed. If the inventory is full, the items are lost
   - displayName: Example End Portal Frame # The name of the item, that should be displayed to the user. One of displayName or material required.
@@ -170,6 +170,6 @@ questSteps: # All steps, that this quest has. These are not sequentially evaluat
         damage: 1 # How much damage has to be done. If not provided, will be 1. Optional.
       advancementDone: # Advancements have to be reached. This is also checked upon activation. Optional.
         keys: # The namespaces keys of the Advancements
-        # Multiple keys are possible. All are required
+        # Multiple keys are possible. All are substitutes
         - minecraft:end/dragon_breath
         - minecraft:adventure/adventuring_time

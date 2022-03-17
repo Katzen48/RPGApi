@@ -41,20 +41,49 @@ public class Criterion {
         return function.apply(questProgress, criterionProgress);
     }
 
+    /**
+     * Adds 1 to the progress of <code>subject</code> and checks if <code>required</code> is reached.
+     * @param subject the subject
+     * @param required the required count/amount to reach
+     * @return if the required progress is reached
+     */
     protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required) {
         return checkIntegerProgress(subject, required, 1);
     }
 
-    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int toAdd) {
+    /**
+     * Adds <code>value</code> to the progress of <code>subject</code> and checks if <code>required</code> is reached.
+     * @param subject the subject
+     * @param required the required count/amount to reach
+     * @param value the count/amount to add
+     * @return if the required progress is reached
+     */
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value) {
+        return checkIntegerProgress(subject, required, value, true);
+    }
+
+    /**
+     * If <code>add == true</code> adds <code>value</code> to the progress of <code>subject</code> and checks,
+     * if <code>required</code> is reached.
+     *
+     * Else checks if <code>value == required</code> and writes it to the progress of subject.
+     * This is not for performance, but for displaying the progress to the subject.
+     * @param subject
+     * @param required
+     * @param value
+     * @param add
+     * @return
+     */
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, boolean add) {
         return withProgress(subject, ((questProgress, criterionProgress) -> {
             IntegerCriterionProgress<BlockPlacement> progress = (IntegerCriterionProgress<BlockPlacement>) criterionProgress;
 
             int current = 0;
 
-            if (questProgress != null && progress != null) {
+            if (add && questProgress != null && progress != null) {
                 current = progress.getValue();
             }
-            current += toAdd;
+            current += value;
 
             if (questProgress != null && progress != null) {
                 progress.setValue(current);

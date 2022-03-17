@@ -4,7 +4,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.manager.QuestManager;
-import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

@@ -15,6 +15,8 @@ import net.chrotos.rpgapi.selectors.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 
@@ -44,9 +46,9 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                             .title(config.getString("title"))
                             .subTitle(config.getString("subTitle"))
                             .level(config.getInt("level"))
-                            .actions(mapActions(config.getObject("actions", Map.class)))
+                            .actions(mapActions(config.getConfigurationSection("actions").getValues(true)))
                             .initializationActions(mapInitializationActions(
-                                    config.getObject("initializationActions", Map.class)));
+                                config.getConfigurationSection("initializationActions").getValues(true)));
 
 
         List<Map<?, ?>> questSteps;
@@ -287,7 +289,9 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                                     .loots(actions.getLoots())
                                     .lootTables(actions.getLootTables())
                                     .advancements(actions.getAdvancements())
-                                    .commands(actions.getCommands());
+                                    .commands(actions.getCommands())
+                                    .once(section != null && section.containsKey("once") ?
+                                            (boolean) section.get("once") : true);
 
         if (actions.getExperience() != null) {
             builder.experience(actions.getExperience());
@@ -319,7 +323,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             }
 
             if (section.containsKey("experience")) {
-                IntegerRange range = mapIntegerRange((Map<?, ?>) section.get("experience"));
+                IntegerRange range = mapIntegerRange(((ConfigurationSection) section.get("experience")).getValues(true));
                 builder.experience(Experience.builder().min(range.getMin()).max(range.getMax()).build());
             }
 
@@ -330,15 +334,15 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 }
             }
 
-            Map<?, ?> title = (Map<?, ?>) section.get("title");
+            ConfigurationSection title = (ConfigurationSection) section.get("title");
             if (title != null) {
                 Title.TitleBuilder titleBuilder = Title.builder();
 
-                if (title.containsKey("title")) {
+                if (title.contains("title")) {
                     titleBuilder.title((String) title.get("title"));
                 }
 
-                if (title.containsKey("subTitle")) {
+                if (title.contains("subTitle")) {
                     titleBuilder.subTitle((String) title.get("subTitle"));
                 }
 

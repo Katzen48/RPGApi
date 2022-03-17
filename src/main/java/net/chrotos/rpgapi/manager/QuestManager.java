@@ -3,14 +3,17 @@ package net.chrotos.rpgapi.manager;
 import com.google.common.collect.Maps;
 import lombok.*;
 import net.chrotos.rpgapi.config.ConfigStorage;
+import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.criteria.Criterion;
-import net.chrotos.rpgapi.criteria.eventhandler.InventoryChangeEventHandler;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestGraph;
+import net.chrotos.rpgapi.quests.QuestLevel;
+import net.chrotos.rpgapi.subjects.DefaultQuestSubject;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import net.chrotos.rpgapi.utils.CounterLock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -34,26 +37,16 @@ public class QuestManager {
     private final ConfigStorage configStorage;
     @Getter
     @Setter
-    private static Function<UUID, ? extends QuestSubject> subjectProvider;
+    @NonNull
+    private static Function<UUID, ? extends QuestSubject> subjectProvider = DefaultQuestSubject::create;
 
     @Synchronized
-    public QuestSubject getQuestSubject(UUID uniqueId) {
-        return getQuestSubject(uniqueId, false);
-    }
-
-    @Synchronized
-    public QuestSubject getQuestSubject(UUID uniqueId, boolean elseCreate) {
+    public QuestSubject getQuestSubject(@NonNull UUID uniqueId) {
         if (subjectHashMap.containsKey(uniqueId)) {
             return subjectHashMap.get(uniqueId);
-        } else {
-            QuestSubject subject = loadQuestSubject(uniqueId);
-
-            if (subject != null || !elseCreate) {
-                return subject;
-            }
-
-            return subjectProvider.apply(uniqueId);
         }
+
+        return loadQuestSubject(uniqueId);
     }
 
     @Synchronized
@@ -67,11 +60,8 @@ public class QuestManager {
 
     @Synchronized
     protected void removeQuestSubject(@NonNull QuestSubject questSubject) {
-        if (!subjectHashMap.containsKey(questSubject.getUniqueId())) {
-            return;
-        }
-
         subjectHashMap.remove(questSubject.getUniqueId());
+        CounterLock.reset(questSubject.getUniqueId());
     }
 
     @Synchronized
@@ -132,18 +122,31 @@ public class QuestManager {
         try {
             QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId());
             addQuestSubject(subject);
+            boolean initialize = true;
+            if (subject.getLevel() == null) {
+                completeLevel(subject);
+                initialize = false;
+            }
 
-            subject.getActiveQuests().stream()
-                                    .filter(quest -> !quest.getInitializationActions().isOnce())
-                                    .forEach(quest -> subject.award(quest.getInitializationActions()));
+            checkOnJoin(subject);
+            saveQuestSubject(subject.getUniqueId());
 
-            InventoryChangeEventHandler.InventoryInvocationHandler.inject(event.getPlayer());
+            if (initialize) {
+                subject.getActiveQuests().stream()
+                        .filter(quest -> !quest.getInitializationActions().isOnce())
+                        .forEach(quest -> subject.award(quest.getInitializationActions()));
+            }
         } catch (Throwable throwable) {
             event.getPlayer().kick(Component.text("Error whilst initializing Quests!")
                     .color(NamedTextColor.DARK_RED));
 
             throwable.printStackTrace();
         }
+    }
+
+    @Synchronized
+    private void checkOnJoin(@NonNull QuestSubject subject) {
+        checkCompletance(subject, AdvancementDone.class, null);
     }
 
     @Synchronized
@@ -155,7 +158,17 @@ public class QuestManager {
     // TODO move to quest class?
     @Synchronized
     public <T> void checkCompletance(@NonNull QuestSubject subject, @NonNull Class<? extends Checkable<T>> clazz, T object) {
-        subject.getActiveQuests().removeIf(quest -> {
+        List<Quest> quests = subject.getActiveQuests();
+
+        if (quests == null) {
+            return;
+        }
+
+        CounterLock.increment(subject.getUniqueId());
+
+        List<Quest> completedQuests = new ArrayList<>();
+
+        quests.removeIf(quest -> {
             QuestProgress questProgress = subject.getQuestProgress().stream()
                                                                     .filter(progress -> progress.getQuest() == quest)
                                                                     .findFirst().orElse(null);
@@ -173,17 +186,16 @@ public class QuestManager {
                                             .contains(questCriterion))
                                         .forEach(questCriterion -> {
 
-
                     AtomicInteger criteria = new AtomicInteger();
                     AtomicInteger completed = new AtomicInteger();
-                    Arrays.stream(questCriterion.getClass().getFields())
-                            .filter(field -> Criterion.class.isAssignableFrom(field.getDeclaringClass()))
+                    Arrays.stream(questCriterion.getClass().getDeclaredFields())
+                            .filter(field -> Checkable.class.isAssignableFrom(field.getType()))
                             .forEach(field -> {
 
                         field.setAccessible(true);
-                        Criterion fieldValue;
+                        Checkable<?> fieldValue;
                         try {
-                            if ((fieldValue = (Criterion) field.get(questCriterion)) != null) {
+                            if ((fieldValue = (Checkable<?>) field.get(questCriterion)) != null) {
                                 criteria.incrementAndGet();
                             } else {
                                 return;
@@ -193,11 +205,13 @@ public class QuestManager {
                             return;
                         }
 
-                        if (!(clazz.isAssignableFrom(fieldValue.getClass()))) {
-                            if (finalQuestProgress.getCompletedCriteria().contains(fieldValue)) {
-                                completed.incrementAndGet();
-                            }
+                        if (finalQuestProgress.getCompletedCriteria().contains(fieldValue)) {
+                            completed.incrementAndGet();
 
+                            return;
+                        }
+
+                        if (!clazz.isInstance(fieldValue)) {
                             return;
                         }
 
@@ -205,20 +219,27 @@ public class QuestManager {
 
                         // If is valid, complete criterion
                         if (checkable.check(subject, object)) {
+                            completed.incrementAndGet();
                             finalQuestProgress.getCompletedCriteria().add((Criterion) checkable);
-                            completed.getAndIncrement();
                         }
                     });
 
                     // If count of completed criteria equals set criteria, complete quest criterion
                     if (completed.get() >= criteria.get()) {
                         finalQuestProgress.getCompletedQuestCriteria().add(questCriterion);
+                        finalQuestProgress.getCompletedCriteria().removeIf(criterion -> criterion.getQuestCriterion() == questCriterion);
                     }
                 });
 
                 // If no more quest criteria, complete quest step
-                if (finalQuestProgress.getCompletedQuestCriteria().size() >= questStep.getCriteria().size()) {
+                if (finalQuestProgress.getCompletedQuestCriteria()
+                        .stream().filter(
+                                questCriterion -> questCriterion.getQuestStep() == questStep)
+                        .count() >= questStep.getCriteria().size()) {
+
                     finalQuestProgress.getCompletedSteps().add(questStep);
+                    finalQuestProgress.getCompletedQuestCriteria().removeIf(
+                            questCriterion -> questCriterion.getQuestStep() == questStep);
                     subject.complete(questStep);
                 }
             });
@@ -230,7 +251,8 @@ public class QuestManager {
 
                 subject.getCompletedQuests().add(quest);
                 subject.complete(quest);
-                checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, quest);
+                completedQuests.add(quest);
+                subject.getQuestProgress().remove(finalQuestProgress);
 
                 // Remove the quest from the active quests
                 return true;
@@ -240,14 +262,37 @@ public class QuestManager {
             return false;
         });
 
-        // Activate next level
+        completedQuests.forEach(quest -> {
+            checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, quest);
+        });
+
+        completeLevel(subject);
+
+        if(CounterLock.decrement(subject.getUniqueId()) < 1) {
+            saveQuestSubject(subject.getUniqueId());
+            CounterLock.reset(subject.getUniqueId());
+        }
+    }
+
+    private void completeLevel(@NonNull QuestSubject subject) {
+        QuestLevel nextLevel = null;
+        if (subject.getLevel() == null) {
+            if (getQuestGraph().getLevels().size() > 0) {
+                nextLevel = getQuestGraph().getLevels().get(0);
+            }
+        } else {
+            nextLevel = subject.getLevel().getNextLevel();
+        }
+
+        if (nextLevel == null) {
+            return;
+        }
+
         if (subject.getActiveQuests().size() < 1) {
-            subject.setLevel(subject.getLevel().getNextLevel());
+            subject.setLevel(nextLevel);
 
             // TODO manual activation?
-            if (subject.getLevel() != null) {
-                subject.getLevel().getQuests().forEach(quest -> subject.activate(quest, this));
-            }
+            subject.getLevel().getQuests().forEach(quest -> subject.activate(quest, this));
         }
     }
 }

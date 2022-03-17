@@ -75,15 +75,14 @@ public class DefaultQuestSubject implements QuestSubject {
             if (loot.getDurability() != null) {
                 itemStack.setDurability(loot.getDurability());
             }
+
             if (loot.getDisplayName() != null) {
                 ItemMeta meta = itemStack.getItemMeta();
                 meta.displayName(Component.text(loot.getDisplayName())); // TODO: i18n
                 itemStack.setItemMeta(meta);
             }
 
-            if (!player.getInventory().addItem(itemStack).isEmpty()) {
-                throw new IllegalStateException("Inventory is full");
-            }
+            player.getInventory().addItem(itemStack);
         }
     }
 
@@ -97,7 +96,7 @@ public class DefaultQuestSubject implements QuestSubject {
             }
 
             Bukkit.getLootTable(lootTable.getKey())
-                    .fillInventory(player.getInventory(), new Random(), contextBuilder.build());
+                    .populateLoot(new Random(), contextBuilder.build()).forEach(player.getInventory()::addItem);
         }
     }
 
@@ -144,11 +143,5 @@ public class DefaultQuestSubject implements QuestSubject {
 
     public static DefaultQuestSubject create(@NonNull UUID uniqueId) {
         return new DefaultQuestSubject(uniqueId);
-    }
-
-    static {
-        if (QuestManager.getSubjectProvider() != null) {
-            QuestManager.setSubjectProvider(DefaultQuestSubject::create);
-        }
     }
 }

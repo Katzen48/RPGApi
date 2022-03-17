@@ -2,6 +2,7 @@ package net.chrotos.rpgapi;
 
 import lombok.Getter;
 import net.chrotos.rpgapi.criteria.eventhandler.*;
+import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,9 +37,13 @@ public class RPGPlugin extends JavaPlugin {
         super.onEnable();
 
         questManager.getQuestGraph();
+
+        registerEventHandlers();
     }
 
     private void registerEventHandlers() {
+        getServer().getPluginManager().registerEvents(new PlayerEventListener(this), this);
+
         getServer().getPluginManager().registerEvents(new AdvancementEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new BlockPlacementEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new EntityDamageEventHandler(getQuestManager()), this);
@@ -47,7 +52,6 @@ public class RPGPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemUseEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new LocationEventHandler(getQuestManager()), this);
 
-        InventoryChangeEventHandler.setQuestManager(getQuestManager());
-        getServer().getPluginManager().registerEvents(new InventoryChangeEventHandler(), this);
+        getServer().getPluginManager().registerEvents(new InventoryChangeEventHandler(this), this);
     }
 }
