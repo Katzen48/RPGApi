@@ -1,0 +1,16 @@
+##################################################################
+#  This is a configuration example for a npc.                    #
+#  The maximum number of fields is included with descriptions.   #
+#  All fields are required unless they are stated as "Optional"  #
+##################################################################
+
+displayName: §6Quest Master # Display name of the NPC. Optional.
+profession: LIBRARIAN # Profession of the Villager. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/Villager.Profession.html
+location:
+  world: world # The world, this NPC should spawn.
+  x: 1400.5 # x-coordinate
+  y: 85 # y-coordinate
+  z: 471.5 # z-coordinate
+  pitch: 0.00 # pitch (vertical)
+  yaw: 0.00 # yaw (horizontal)
+blockMarkerMaterial: BROWN_STAINED_GLASS # Material of the block marker. If not set, no marker will be shown. Optional.

@@ -23,7 +23,7 @@ public class YamlStore implements ConfigStorage {
             dataFolder.mkdirs();
         }
 
-        this.questsFolder = new File(dataFolder.getAbsolutePath(), "quests");
+        this.questsFolder = new File(dataFolder, "quests");
     }
 
     public FileConfiguration getRaw(@NonNull String id) {

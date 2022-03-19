@@ -56,6 +56,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             builder.step(mapQuestStep(step, id));
         }
 
+        builder.npc(config.getString("npc"));
+
         Quest quest = builder.build();
         for (QuestStep questStep : quest.getSteps()) {
             questStep.setQuest(quest);

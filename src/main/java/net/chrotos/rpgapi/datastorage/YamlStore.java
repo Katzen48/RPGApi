@@ -22,7 +22,7 @@ public class YamlStore implements SubjectStorage {
             dataFolder.mkdirs();
         }
 
-        this.subjectsFolder = new File(dataFolder.getAbsolutePath(), "subjects");
+        this.subjectsFolder = new File(dataFolder, "subjects");
     }
 
     public FileConfiguration getRaw(@NonNull String id, boolean create) {

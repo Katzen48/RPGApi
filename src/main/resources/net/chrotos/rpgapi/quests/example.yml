@@ -6,6 +6,7 @@
 ##################################################################
 
 name: Example Quest # Name of the quest
+npc: example # The id of the quest npc. Optional.
 questTab: Tutorial # In which Tab of the quest menu the quest should be displayed
 hidden: false # If the quest should be hidden until it was completed
 announce: true # If an announcement in chat should be displayed upon completion

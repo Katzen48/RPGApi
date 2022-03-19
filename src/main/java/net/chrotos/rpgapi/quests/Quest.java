@@ -22,6 +22,11 @@ public class Quest {
      */
     @NonNull
     private final String name;
+
+    /**
+     * The id of the quest npc.
+     */
+    private final String npc;
     /**
      * In which quest tab this quest should be shown
      */

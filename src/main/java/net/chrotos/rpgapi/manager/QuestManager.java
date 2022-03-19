@@ -8,6 +8,8 @@ import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.criteria.Criterion;
 import net.chrotos.rpgapi.criteria.Location;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
+import net.chrotos.rpgapi.npc.NPC;
+import net.chrotos.rpgapi.npc.NPCLoader;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.quests.QuestLevel;
@@ -19,6 +21,7 @@ import net.chrotos.rpgapi.utils.CounterLock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Villager;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +42,11 @@ public class QuestManager {
     private final SubjectStorage subjectStorage;
     @NonNull
     private final ConfigStorage configStorage;
+    @NonNull
+    private final NPCLoader npcLoader;
+    @Getter
+    private final List<NPC> npcs = Collections.synchronizedList(new ArrayList<>());
+
     @Getter
     @Setter
     @NonNull
@@ -104,6 +112,19 @@ public class QuestManager {
         }
 
         return questGraph;
+    }
+
+    @Synchronized
+    public void loadNPCs() {
+        npcs.addAll(npcLoader.getNPCs());
+
+        int npcCount = npcs.size();
+        int questCount = npcs.stream().mapToInt(npc -> npc.getQuests().size()).sum();
+        logger.info(String.format("%d NPCs with %d quests loaded", npcCount, questCount));
+    }
+
+    public NPC getNPC(@NonNull Villager villager) {
+        return npcs.stream().filter(npc -> npc.getEntity() == villager).findFirst().orElse(null);
     }
 
     @Synchronized
@@ -307,7 +328,7 @@ public class QuestManager {
             subject.setLevel(nextLevel);
 
             // TODO manual activation?
-            subject.getLevel().getQuests().forEach(quest -> subject.activate(quest, this));
+            //subject.getLevel().getQuests().forEach(quest -> subject.activate(quest, this));
         }
     }
 }
