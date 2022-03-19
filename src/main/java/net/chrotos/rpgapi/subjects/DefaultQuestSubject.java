@@ -134,6 +134,23 @@ public class DefaultQuestSubject implements QuestSubject {
             return;
         }
 
+        // Find first quest step level
+        int level = quest.getSteps().stream().mapToInt(QuestStep::getLevel).min().getAsInt();
+
+        // Get or create progress
+        QuestProgress curQuestProgress = getQuestProgress().stream()
+                .filter(progress -> progress.getQuest() == quest).findFirst()
+                .orElse(null);
+
+        if (curQuestProgress == null) {
+            curQuestProgress = QuestProgress.builder().quest(quest).build();
+            getQuestProgress().add(curQuestProgress);
+        }
+        // Add quest step to activeQuestSteps
+        QuestProgress finalCurQuestProgress = curQuestProgress;
+        quest.getSteps().stream().filter(questStep -> questStep.getLevel() == level)
+                .forEach(questStep -> finalCurQuestProgress.getActiveQuestSteps().add(questStep));
+
         award(quest.getInitializationActions());
         getActiveQuests().add(quest);
 

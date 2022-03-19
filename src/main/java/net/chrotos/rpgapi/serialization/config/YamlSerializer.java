@@ -1,6 +1,7 @@
 package net.chrotos.rpgapi.serialization.config;
 
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
 import net.chrotos.rpgapi.config.YamlStore;
@@ -16,7 +17,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemorySection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.EntityType;
 
@@ -25,13 +25,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 public class YamlSerializer implements QuestSerializer<YamlStore> {
-    private YamlStore configStorage;
-
-    @Override
-    public void initialize(@NonNull YamlStore configStorage) {
-        this.configStorage = configStorage;
-    }
+    @NonNull
+    private final YamlStore configStorage;
 
     @Override
     public Quest getQuest(@NonNull String id) {
@@ -74,8 +71,11 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
     private QuestStep mapQuestStep(@NonNull Map<?, ?> section, @NonNull String id) {
         QuestStep.QuestStepBuilder builder = QuestStep.builder()
-                                .required(!section.containsKey("required") || (boolean) section.get("required"))
                                 .actions(mapActions((Map<?, ?>) section.get("actions")));
+
+        if (section.containsKey("level")) {
+            builder.level((int) section.get("level"));
+        }
 
         List<Map<?, ?>> criteria = (List<Map<?, ?>>) section.get("criteria");
 
@@ -186,12 +186,18 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         if (section.containsKey("inventory")) {
             Map<?, ?> inventory = (Map<?, ?>) section.get("inventory");
             Inventory.InventoryBuilder<?, ?> inventoryBuilder = Inventory.builder();
-            for (String displayName : (List<String>) inventory.get("displayNames")) {
-                inventoryBuilder.displayName(displayName);
+            if (inventory.containsKey("displayNames")) {
+                for (String displayName : (List<String>) inventory.get("displayNames")) {
+                    inventoryBuilder.displayName(displayName);
+                }
             }
-            for (String material : (List<String>) inventory.get("materials")) {
-                inventoryBuilder.material(Material.getMaterial(material));
+
+            if (inventory.containsKey("materials")) {
+                for (String material : (List<String>) inventory.get("materials")) {
+                    inventoryBuilder.material(Material.getMaterial(material));
+                }
             }
+
             inventoryBuilder.count(inventory.containsKey("count") ? (int) inventory.get("count") : 1);
 
             if (inventory.containsKey("player")) {

@@ -16,10 +16,10 @@ public class QuestStep {
      */
     private Quest quest;
     /**
-     * If this quest is required, to complete the quest. Defaults to true.
+     * The level of this quest step. Steps of the same level need to be completed, to active the next level. Defaults to 0
      */
     @Builder.Default
-    private final boolean required = true;
+    private final int level = 0;
     /**
      * The Criteria for completing this quest step
      */

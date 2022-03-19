@@ -17,6 +17,7 @@ import java.util.*;
 
 @RequiredArgsConstructor
 public class YamlSerializer implements SubjectSerializer<YamlStore> {
+    @NonNull
     private final YamlStore subjectStorage;
 
     @Override
@@ -67,6 +68,14 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
 
         QuestProgress.QuestProgressBuilder builder = QuestProgress.builder();
         builder.quest(quest);
+
+        List<QuestStep> activeSteps = Collections.synchronizedList(new ArrayList<>());
+        if (questProgress.containsKey("activeSteps")) {
+            for (int step : (List<Integer>) questProgress.get("activeSteps")) {
+                activeSteps.add(mapQuestStep(step, quest));
+            }
+        }
+        builder.activeQuestSteps(activeSteps);
 
         List<QuestStep> completedSteps = Collections.synchronizedList(new ArrayList<>());
         if (questProgress.containsKey("completedSteps")) {
@@ -170,6 +179,13 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
 
             map.put("quest", questProgress.getQuest().getId());
 
+            // Active Steps
+            List<Integer> activeSteps = new ArrayList<>();
+            questProgress.getActiveQuestSteps().forEach(step -> {
+                activeSteps.add(questProgress.getQuest().getSteps().indexOf(step));
+            });
+            map.put("activeSteps", activeSteps);
+
             // Completed Steps
             List<Integer> completedSteps = new ArrayList<>();
             questProgress.getCompletedSteps().forEach(step -> {
@@ -210,6 +226,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
             });
             map.put("completedCriteria", completedCriteria);
 
+            // Criterion Progress
             List<Map<?, ?>> criterionProgresses = new ArrayList<>();
             questProgress.getCriterionProgresses().forEach(criterionProgress -> {
                 Map<String, Object> progressMap = new HashMap<>();
@@ -223,7 +240,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
                         .indexOf(criterionProgress.getCriterion().getQuestCriterion()));
 
                 progressMap.put("type", Arrays.stream(criterionProgress.getCriterion().getQuestCriterion().getClass()
-                        .getFields()).filter(field -> field.getType()
+                        .getDeclaredFields()).filter(field -> field.getType()
                             .isAssignableFrom(criterionProgress.getCriterion().getClass()))
                         .findFirst().get().getName());
 

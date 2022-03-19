@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class YamlStore implements ConfigStorage {
     @NonNull
     private final File questsFolder;
-    private YamlSerializer questSerializer;
+    private YamlSerializer questSerializer = new YamlSerializer(this);
 
     public YamlStore(@NonNull File dataFolder) {
         if (!dataFolder.exists()) {
@@ -24,12 +24,6 @@ public class YamlStore implements ConfigStorage {
         }
 
         this.questsFolder = new File(dataFolder.getAbsolutePath(), "quests");
-    }
-
-    @Override
-    public void initialize() {
-        this.questSerializer = new YamlSerializer();
-        questSerializer.initialize(this);
     }
 
     public FileConfiguration getRaw(@NonNull String id) {

@@ -20,6 +20,11 @@ public class QuestProgress {
     @NonNull
     private final Quest quest;
     /**
+     * The active quest steps
+     */
+    @Builder.Default
+    private final List<QuestStep> activeQuestSteps = Collections.synchronizedList(new ArrayList<>());
+    /**
      * The already completed steps
      */
     @Builder.Default

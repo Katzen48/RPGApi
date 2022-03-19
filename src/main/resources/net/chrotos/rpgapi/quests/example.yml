@@ -81,7 +81,7 @@ actions: # The actions on quest-level describe things, that get executed after c
       asServer: false # If the command should be executed as the server console. True, if not provided
 questSteps: # All steps, that this quest has. These are not sequentially evaluated but in parallel
   # Multiple quest steps may exist. All "required" steps have to be completed, for the quest to be completed.
-  - required: true # If this step is required in order for the quest to be completable.
+  - level: 0 # In which level the quest step is. The whole level has to be completed, in order for the next level to become available. Optional. Defaults to 0
     actions: # All actions, that should be run after the completion of the step. Same structure as actions in quest
       lootTables: # Optional
       - key: minecraft:chests/abandoned_mineshaft
@@ -173,3 +173,30 @@ questSteps: # All steps, that this quest has. These are not sequentially evaluat
         # Multiple keys are possible. All are substitutes
         - minecraft:end/dragon_breath
         - minecraft:adventure/adventuring_time
+      inventory: # Items in the inventory, that the player must have. Tested on execution of the "give" command. Optional.
+        displayNames: # The possible item names, that may be counted towards the completion. One of displayNames or materials is required.
+          # Multiple strings are possible, all are alternatives
+          - Pickaxe
+          - Shovel
+        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html. One of displayNames or materials is required.
+          # Multiple strings are possible, all are alternatives
+          - DIAMOND_PICKAXE
+          - DIAMOND_SHOVEL
+        count: 10 # The required count. All alternatives count towards that. If not provided, will be 1. Optional.
+        player:
+          id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1
+          name: Test
+          location:
+            world: world # World
+              min: # Lower edge. One of min, max or exact is required. Exact is not compatible with min and max.
+                x: 100 # x-coordinate
+                y: 100 # y-coordinate
+                z: 100 # z-coordinate
+              max: # Upper edge. One of min, max or exact is required. Exact is not compatible with min and max.
+                x: 200 # x-coordinate
+                y: 200 # y-coordinate
+                z: 200 # z-coordinate
+              exact: # the exact position. One of min, max or exact is required. Exact is not compatible with min and max.
+                x: 150 # x-coordinate
+                y: 150 # y-coordinate
+                z: 150 # z-coordinate

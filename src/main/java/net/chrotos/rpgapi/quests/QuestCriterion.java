@@ -65,6 +65,7 @@ public class QuestCriterion {
         setThisInstance(blockPlacement);
         setThisInstance(entityDamage);
         setThisInstance(advancementDone);
+        setThisInstance(inventory);
     }
 
     private void setThisInstance(Criterion criterion) {

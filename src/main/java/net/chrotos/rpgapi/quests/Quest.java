@@ -56,7 +56,6 @@ public class Quest {
      * The actions, to be executed after quest completion.
      */
     private final Actions actions;
-
     /**
      * The actions, to be executed after activation or join
      */

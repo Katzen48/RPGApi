@@ -1,7 +1,11 @@
 package net.chrotos.rpgapi;
 
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.eventhandler.*;
+import net.chrotos.rpgapi.datastorage.SubjectStorage;
 import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
 import org.bukkit.plugin.PluginLoadOrder;
@@ -11,31 +15,38 @@ import org.bukkit.plugin.java.annotation.plugin.LoadOrder;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
 import org.bukkit.plugin.java.annotation.plugin.author.Author;
 
-@Plugin(name = "RPGApi", version = "1.18.1")
+@Plugin(name = "RPGApi", version = "1.18.2")
 @Author("Katzen48")
 @LoadOrder(PluginLoadOrder.STARTUP)
 @ApiVersion(ApiVersion.Target.v1_18)
 public class RPGPlugin extends JavaPlugin {
     @Getter
     private QuestManager questManager;
+    @Setter
+    @NonNull
+    private SubjectStorage subjectStorage;
+    @Setter
+    @NonNull
+    private ConfigStorage configStorage;
 
     @Override
     public void onLoad() {
         super.onLoad();
-
-        net.chrotos.rpgapi.datastorage.YamlStore subjectStorage = new
-                                                            net.chrotos.rpgapi.datastorage.YamlStore(getDataFolder());
-
-        net.chrotos.rpgapi.config.YamlStore configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
-        configStorage.initialize();
-
-        questManager = new QuestManager(getLogger(), subjectStorage, configStorage);
     }
 
     @Override
     public void onEnable() {
         super.onEnable();
 
+        if (subjectStorage == null) {
+            subjectStorage = new net.chrotos.rpgapi.datastorage.YamlStore(getDataFolder());
+        }
+
+        if (configStorage == null) {
+            configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
+        }
+
+        questManager = new QuestManager(getLogger(), subjectStorage, configStorage);
         questManager.getQuestGraph();
 
         registerEventHandlers();

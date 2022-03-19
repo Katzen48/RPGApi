@@ -6,21 +6,25 @@ import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.criteria.Criterion;
+import net.chrotos.rpgapi.criteria.Location;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.quests.QuestLevel;
+import net.chrotos.rpgapi.quests.QuestStep;
 import net.chrotos.rpgapi.subjects.DefaultQuestSubject;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.chrotos.rpgapi.utils.CounterLock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -128,7 +132,7 @@ public class QuestManager {
                 initialize = false;
             }
 
-            checkOnJoin(subject);
+            checkAlreadyDone(subject);
             saveQuestSubject(subject.getUniqueId());
 
             if (initialize) {
@@ -145,8 +149,10 @@ public class QuestManager {
     }
 
     @Synchronized
-    private void checkOnJoin(@NonNull QuestSubject subject) {
+    private void checkAlreadyDone(@NonNull QuestSubject subject) {
         checkCompletance(subject, AdvancementDone.class, null);
+        checkCompletance(subject, Location.class, Bukkit.getPlayer(subject.getUniqueId()).getLocation());
+        checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, null);
     }
 
     @Synchronized
@@ -167,21 +173,15 @@ public class QuestManager {
         CounterLock.increment(subject.getUniqueId());
 
         List<Quest> completedQuests = new ArrayList<>();
+        AtomicBoolean questStepsCompleted = new AtomicBoolean();
 
         quests.removeIf(quest -> {
             QuestProgress questProgress = subject.getQuestProgress().stream()
                                                                     .filter(progress -> progress.getQuest() == quest)
-                                                                    .findFirst().orElse(null);
-
-            if (questProgress == null) {
-                questProgress = QuestProgress.builder().quest(quest).build();
-                subject.getQuestProgress().add(questProgress);
-            }
+                                                                    .findFirst().get();
 
             final QuestProgress finalQuestProgress = questProgress;
-            quest.getSteps().stream().filter(questStep -> !finalQuestProgress.getCompletedSteps().contains(questStep))
-                                        .forEach(questStep -> {
-
+            boolean removed = finalQuestProgress.getActiveQuestSteps().removeIf(questStep -> {
                 questStep.getCriteria().stream().filter(questCriterion -> !finalQuestProgress.getCompletedQuestCriteria()
                                             .contains(questCriterion))
                                         .forEach(questCriterion -> {
@@ -240,14 +240,19 @@ public class QuestManager {
                     finalQuestProgress.getCompletedSteps().add(questStep);
                     finalQuestProgress.getCompletedQuestCriteria().removeIf(
                             questCriterion -> questCriterion.getQuestStep() == questStep);
+
                     subject.complete(questStep);
+
+                    return true;
                 }
+
+                return false;
             });
 
-            // If no more required steps, complete quest
-            if (quest.getSteps().stream()
-                    .noneMatch(questStep -> questStep.isRequired() && !finalQuestProgress.getCompletedSteps()
-                            .contains(questStep))) {
+            questStepsCompleted.set(questStepsCompleted.get() || removed);
+
+            // If no more steps, complete quest
+            if (quest.getSteps().size() <= finalQuestProgress.getCompletedSteps().size()) {
 
                 subject.getCompletedQuests().add(quest);
                 subject.complete(quest);
@@ -256,11 +261,21 @@ public class QuestManager {
 
                 // Remove the quest from the active quests
                 return true;
+            } else if (finalQuestProgress.getActiveQuestSteps().size() < 1) {
+                int level = finalQuestProgress.getCompletedSteps().stream()
+                        .mapToInt(QuestStep::getLevel).max().getAsInt() + 1;
+
+                quest.getSteps().stream().filter(questStep -> questStep.getLevel() == level)
+                        .forEach(finalQuestProgress.getActiveQuestSteps()::add);
             }
 
             // Quest is still active
             return false;
         });
+
+        if (questStepsCompleted.get()) {
+            checkAlreadyDone(subject);
+        }
 
         completedQuests.forEach(quest -> {
             checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, quest);

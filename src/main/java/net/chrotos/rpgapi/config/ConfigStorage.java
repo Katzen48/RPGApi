@@ -10,7 +10,6 @@ import java.util.List;
  * Uses an implementation of {@link QuestSerializer} to load quests
  */
 public interface ConfigStorage {
-    void initialize();
     @NonNull
     List<String> getQuestIds();
     Quest getQuest(@NonNull String id);
