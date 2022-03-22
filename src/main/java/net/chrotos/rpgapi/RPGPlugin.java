@@ -24,6 +24,8 @@ import org.bukkit.plugin.java.annotation.plugin.author.Author;
 @ApiVersion(ApiVersion.Target.v1_18)
 public class RPGPlugin extends JavaPlugin {
     @Getter
+    private static RPGPlugin instance;
+    @Getter
     private QuestManager questManager;
     @Setter
     @NonNull
@@ -36,8 +38,10 @@ public class RPGPlugin extends JavaPlugin {
     public void onLoad() {
         super.onLoad();
 
+        instance = this;
+
         NPC.setEntityTrackingRange(getServer().spigot().getSpigotConfig()
-                .getDouble("world-settings.default.entity-tracking-range.other", 32));
+                .getDouble("world-settings.default.entity-tracking-range.other", 64));
     }
 
     @Override

@@ -1,18 +1,22 @@
 package net.chrotos.rpgapi.subjects;
 
 import lombok.*;
+import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 import net.chrotos.rpgapi.quests.QuestStep;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.loot.LootContext;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
 
@@ -69,8 +73,11 @@ public class DefaultQuestSubject implements QuestSubject {
     @Override
     @Synchronized
     public void award(@NonNull Loot... loots) throws IllegalStateException {
+        NamespacedKey key = new NamespacedKey(RPGPlugin.getInstance(), "award");
+
         for (Loot loot : loots) {
             ItemStack itemStack = new ItemStack(loot.getMaterial(), loot.getCount().getNext());
+            itemStack.getItemMeta().getPersistentDataContainer().set(key, PersistentDataType.BYTE, (byte) 1);
 
             if (loot.getDurability() != null) {
                 itemStack.setDurability(loot.getDurability());
@@ -78,7 +85,7 @@ public class DefaultQuestSubject implements QuestSubject {
 
             if (loot.getDisplayName() != null) {
                 ItemMeta meta = itemStack.getItemMeta();
-                meta.displayName(Component.text(loot.getDisplayName())); // TODO: i18n
+                meta.displayName(LegacyComponentSerializer.builder().build().deserialize(loot.getDisplayName())); // TODO: i18n
                 itemStack.setItemMeta(meta);
             }
 
@@ -103,8 +110,7 @@ public class DefaultQuestSubject implements QuestSubject {
     @Override
     @Synchronized
     public void award(@NonNull Title title) {
-        player.showTitle(net.kyori.adventure.title.Title.title(Component.text(title.getTitle()), // TODO: i18n
-                                                                Component.text(title.getSubTitle())));
+        showTitle(title.getTitle(), title.getSubTitle());
     }
 
     @Override
@@ -152,10 +158,28 @@ public class DefaultQuestSubject implements QuestSubject {
                 .forEach(questStep -> finalCurQuestProgress.getActiveQuestSteps().add(questStep));
 
         award(quest.getInitializationActions());
+        showTitle(quest.getTitle(), quest.getSubTitle());
         getActiveQuests().add(quest);
 
         // TODO check if required quests have already been completed. Refactoring required
         questManager.checkCompletance(this, net.chrotos.rpgapi.criteria.Quest.class, null);
+    }
+
+    public void showTitle(String title, String subTitle) {
+        if (title == null) {
+            return;
+        }
+
+        LegacyComponentSerializer serializer = LegacyComponentSerializer.builder().build();
+        Component subTitleComponent;
+
+        if (subTitle == null) {
+            subTitleComponent = Component.empty();
+        } else {
+            subTitleComponent = serializer.deserialize(subTitle);
+        }
+
+        player.showTitle(net.kyori.adventure.title.Title.title(serializer.deserialize(title), subTitleComponent)); // TODO i18n
     }
 
     public static DefaultQuestSubject create(@NonNull UUID uniqueId) {
