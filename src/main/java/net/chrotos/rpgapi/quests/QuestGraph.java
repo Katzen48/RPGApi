@@ -32,7 +32,7 @@ public class QuestGraph {
     }
 
     public static QuestGraph generate(@NonNull List<Quest> quests) {
-        List<Quest> sortedQuests = Ordering.from(Comparator.comparingInt(Quest::getLevel)).sortedCopy(quests);
+        List<Quest> sortedQuests = Ordering.from(Comparator.comparingInt(Quest::getLevel)).immutableSortedCopy(quests);
         List<QuestLevel> levels = Collections.synchronizedList(new ArrayList<>());
 
         List<Quest> levelQuests = new ArrayList<>();

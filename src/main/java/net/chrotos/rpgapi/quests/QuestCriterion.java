@@ -40,6 +40,10 @@ public class QuestCriterion {
      */
     private final BlockPlacement blockPlacement;
     /**
+     * The blocks, to be broken.
+     */
+    private final BlockBreak blockBreak;
+    /**
      * The entity damage, to be done.
      */
     private final EntityDamage entityDamage;
@@ -63,6 +67,7 @@ public class QuestCriterion {
         setThisInstance(itemPickup);
         setThisInstance(itemUse);
         setThisInstance(blockPlacement);
+        setThisInstance(blockBreak);
         setThisInstance(entityDamage);
         setThisInstance(advancementDone);
         setThisInstance(inventory);

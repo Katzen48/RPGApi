@@ -2,25 +2,25 @@ package net.chrotos.rpgapi.criteria.eventhandler;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.chrotos.rpgapi.criteria.AdvancementDone;
+import net.chrotos.rpgapi.criteria.BlockBreak;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerAdvancementDoneEvent;
+import org.bukkit.event.block.BlockBreakEvent;
 
 @RequiredArgsConstructor
-public class AdvancementEventHandler implements Listener {
+public class BlockBreakEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
-    public void onPlayerAdvancementDone(PlayerAdvancementDoneEvent event) {
+    public void onBlockBreak(BlockBreakEvent event) {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, AdvancementDone.class, event.getAdvancement());
+            questManager.checkCompletance(subject, BlockBreak.class, event.getBlock());
         }
     }
 }

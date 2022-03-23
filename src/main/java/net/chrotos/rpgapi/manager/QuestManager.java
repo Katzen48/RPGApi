@@ -24,7 +24,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -143,7 +142,7 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerJoin(@NotNull PlayerJoinEvent event) {
+    public void onPlayerJoin(@NonNull PlayerJoinEvent event) {
         try {
             QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId());
             addQuestSubject(subject);
@@ -158,7 +157,7 @@ public class QuestManager {
 
             if (initialize) {
                 subject.getActiveQuests().stream()
-                        .filter(quest -> !quest.getInitializationActions().isOnce())
+                        .filter(quest -> quest.getInitializationActions() != null && !quest.getInitializationActions().isOnce())
                         .forEach(quest -> subject.award(quest.getInitializationActions()));
             }
         } catch (Throwable throwable) {
@@ -177,7 +176,7 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerQuit(@NotNull PlayerQuitEvent event) {
+    public void onPlayerQuit(@NonNull PlayerQuitEvent event) {
         saveQuestSubject(event.getPlayer().getUniqueId());
         removeQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
     }
@@ -187,21 +186,16 @@ public class QuestManager {
     public <T> void checkCompletance(@NonNull QuestSubject subject, @NonNull Class<? extends Checkable<T>> clazz, T object) {
         List<Quest> quests = subject.getActiveQuests();
 
-        if (quests == null) {
-            return;
-        }
-
         CounterLock.increment(subject.getUniqueId());
 
         List<Quest> completedQuests = new ArrayList<>();
         AtomicBoolean questStepsCompleted = new AtomicBoolean();
 
-        quests.removeIf(quest -> {
-            QuestProgress questProgress = subject.getQuestProgress().stream()
-                                                                    .filter(progress -> progress.getQuest() == quest)
-                                                                    .findFirst().get();
+        quests.removeIf(quest -> { // TODO ConcurrentModificationException
+            final QuestProgress finalQuestProgress = subject.getQuestProgress().stream()
+                    .filter(progress -> progress.getQuest() == quest)
+                    .findFirst().get();
 
-            final QuestProgress finalQuestProgress = questProgress;
             boolean removed = finalQuestProgress.getActiveQuestSteps().removeIf(questStep -> {
                 questStep.getCriteria().stream().filter(questCriterion -> !finalQuestProgress.getCompletedQuestCriteria()
                                             .contains(questCriterion))
@@ -302,7 +296,9 @@ public class QuestManager {
             checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, quest);
         });
 
-        completeLevel(subject);
+        if (subject.getCompletedQuests().containsAll(subject.getLevel().getQuests())) {
+            completeLevel(subject);
+        }
 
         if(CounterLock.decrement(subject.getUniqueId()) < 1) {
             saveQuestSubject(subject.getUniqueId());
@@ -326,9 +322,6 @@ public class QuestManager {
 
         if (subject.getActiveQuests().size() < 1) {
             subject.setLevel(nextLevel);
-
-            // TODO manual activation?
-            //subject.getLevel().getQuests().forEach(quest -> subject.activate(quest, this));
         }
     }
 }

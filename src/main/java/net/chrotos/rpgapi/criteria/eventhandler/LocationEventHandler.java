@@ -6,6 +6,7 @@ import net.chrotos.rpgapi.criteria.Location;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
@@ -14,7 +15,7 @@ public class LocationEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onPlayerMove(PlayerMoveEvent event) {
         if (!event.hasChangedBlock()) {
             return;

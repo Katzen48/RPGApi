@@ -25,15 +25,13 @@ public class InventoryChangeEventHandler implements Listener {
     @NonNull
     private final RPGPlugin plugin;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
         checkCompletance(event.getEntity(), event.getItem().getItemStack());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onServerCommand(ServerCommandEvent event) {
-        plugin.getLogger().info(event.getCommand());
-
         if (!event.getCommand().contains("give ")) {
             return;
         }

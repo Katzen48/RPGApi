@@ -42,10 +42,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                             .announce(config.getBoolean("announce"))
                             .title(config.getString("title"))
                             .subTitle(config.getString("subTitle"))
-                            .level(config.getInt("level"))
-                            .actions(mapActions(config.getConfigurationSection("actions").getValues(true)))
-                            .initializationActions(mapInitializationActions(
-                                config.getConfigurationSection("initializationActions").getValues(true)));
+                            .level(config.getInt("level"));
 
 
         List<Map<?, ?>> questSteps;
@@ -54,6 +51,15 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         }
         for (Map<?, ?> step : questSteps) {
             builder.step(mapQuestStep(step, id));
+        }
+
+        if (config.contains("actions")) {
+            builder.actions(mapActions(getMap(config.getConfigurationSection("actions"))));
+        }
+
+        if (config.contains("initializationActions")) {
+            builder.initializationActions(mapInitializationActions(
+                    getMap(config.getConfigurationSection("initializationActions"))));
         }
 
         builder.npc(config.getString("npc"));
@@ -73,20 +79,20 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
 
     private QuestStep mapQuestStep(@NonNull Map<?, ?> section, @NonNull String id) {
         QuestStep.QuestStepBuilder builder = QuestStep.builder()
-                                .actions(mapActions((Map<?, ?>) section.get("actions")));
+                                .actions(mapActions(getMap(section.get("actions"))));
 
         if (section.containsKey("level")) {
             builder.level((int) section.get("level"));
         }
 
-        List<Map<?, ?>> criteria = (List<Map<?, ?>>) section.get("criteria");
+        List<?> criteria = (List<?>) section.get("criteria");
 
-        if (criteria.size() < 1) {
-            throw new IllegalStateException(String.format("At least one quest step of quest %s comes with a quest criterion", id));
+        if (criteria == null || criteria.size() < 1) {
+            throw new IllegalStateException(String.format("At least one quest step of quest %s does not come with a quest criterion", id));
         }
 
-        for (Map<?, ?> criterion : criteria) {
-            builder.criterion(mapQuestCriterion(criterion, id));
+        for (Object criterion : criteria) {
+            builder.criterion(mapQuestCriterion(getMap(criterion), id));
         }
 
         return builder.build();
@@ -101,112 +107,158 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         }
 
         if (section.containsKey("quest")) {
-            Map<?, ?> quest = (Map<?, ?>) section.get("quest");
-            builder.quest(new net.chrotos.rpgapi.criteria.Quest((String) quest.get("id")));
+            Map<?, ?> quest = getMap(section.get("quest"));
+            if (quest != null) {
+                builder.quest(new net.chrotos.rpgapi.criteria.Quest((String) quest.get("id")));
+            }
         }
 
         if (section.containsKey("entityKill")) {
-            Map<?, ?> entityKill = (Map<?, ?>) section.get("entityKill");
-            EntityKill.EntityKillBuilder<?, ?> entityKillBuilder = EntityKill.builder();
-            entityKillBuilder.id((String) entityKill.get("id"));
-            entityKillBuilder.type(entityKill.containsKey("entityType") ?
-                    EntityType.valueOf((String) entityKill.get("entityType")) : null);
-            entityKillBuilder.displayName((String) entityKill.get("displayName"));
-            entityKillBuilder.location(mapLocationSelector((Map<?, ?>) entityKill.get("location")));
+            Map<?, ?> entityKill = getMap(section.get("entityKill"));
+            if (entityKill != null) {
+                EntityKill.EntityKillBuilder<?, ?> entityKillBuilder = EntityKill.builder();
+                entityKillBuilder.id((String) entityKill.get("id"));
+                entityKillBuilder.type(entityKill.containsKey("entityType") ?
+                        EntityType.valueOf((String) entityKill.get("entityType")) : null);
+                entityKillBuilder.displayName((String) entityKill.get("displayName"));
 
-            builder.entityKill(entityKillBuilder.build());
+                if (entityKill.containsKey("location")) {
+                    entityKillBuilder.location(mapLocationSelector(getMap(entityKill.get("location"))));
+                }
+
+                builder.entityKill(entityKillBuilder.build());
+            }
         }
 
         if (section.containsKey("location")) {
-            Map<?, ?> location = (Map<?, ?>) section.get("location");
-            builder.location(mapLocationCriterion((Map<?, ?>) location));
+            Map<?, ?> location = getMap(section.get("location"));
+            if (location != null) {
+                builder.location(mapLocationCriterion(location));
+            }
         }
 
         if (section.containsKey("itemPickup")) {
-            Map<?, ?> itemPickup = (Map<?, ?>) section.get("itemPickup");
-            ItemPickup.ItemPickupBuilder<?, ?> itemPickupBuilder = ItemPickup.builder();
-            for (String displayName : (List<String>) itemPickup.get("displayNames")) {
-                itemPickupBuilder.displayName(displayName);
-            }
-            for (String material : (List<String>) itemPickup.get("materials")) {
-                itemPickupBuilder.material(Material.getMaterial(material));
-            }
+            Map<?, ?> itemPickup = getMap(section.get("itemPickup"));
+            if (itemPickup != null) {
+                ItemPickup.ItemPickupBuilder<?, ?> itemPickupBuilder = ItemPickup.builder();
+                if (itemPickup.get("displayNames") != null) {
+                    for (String displayName : (List<String>) itemPickup.get("displayNames")) {
+                        itemPickupBuilder.displayName(displayName);
+                    }
+                }
+                if (itemPickup.get("materials") != null) {
+                    for (String material : (List<String>) itemPickup.get("materials")) {
+                        itemPickupBuilder.material(Material.getMaterial(material));
+                    }
+                }
 
-            itemPickupBuilder.count(itemPickup.containsKey("count") ? (int) itemPickup.get("count") : 1);
-            builder.itemPickup(itemPickupBuilder.build());
+                itemPickupBuilder.count(itemPickup.containsKey("count") ? (int) itemPickup.get("count") : 1);
+                builder.itemPickup(itemPickupBuilder.build());
+            }
         }
 
         if (section.containsKey("itemUse")) {
-            Map<?, ?> itemUse = (Map<?, ?>) section.get("itemUse");
-            ItemUse.ItemUseBuilder<?, ?> itemUseBuilder = ItemUse.builder();
-            for (String displayName : (List<String>) itemUse.get("displayNames")) {
-                itemUseBuilder.displayName(displayName);
-            }
-            for (String material : (List<String>) itemUse.get("materials")) {
-                itemUseBuilder.material(Material.getMaterial(material));
-            }
+            Map<?, ?> itemUse = getMap(section.get("itemUse"));
+            if (itemUse != null) {
+                ItemUse.ItemUseBuilder<?, ?> itemUseBuilder = ItemUse.builder();
 
-            itemUseBuilder.count(itemUse.containsKey("count") ? (int) itemUse.get("count") : 1);
-            builder.itemUse(itemUseBuilder.build());
+                if (itemUse.containsKey("displayNames")) {
+                    for (String displayName : (List<String>) itemUse.get("displayNames")) {
+                        itemUseBuilder.displayName(displayName);
+                    }
+                }
+                if (itemUse.containsKey("materials")) {
+                    for (String material : (List<String>) itemUse.get("materials")) {
+                        itemUseBuilder.material(Material.getMaterial(material));
+                    }
+                }
+
+                itemUseBuilder.count(itemUse.containsKey("count") ? (int) itemUse.get("count") : 1);
+                builder.itemUse(itemUseBuilder.build());
+            }
         }
 
         if (section.containsKey("blockPlacement")) {
-            Map<?, ?> blockPlacement = (Map<?, ?>) section.get("blockPlacement");
-            BlockPlacement.BlockPlacementBuilder<?, ?> blockPlacementBuilder = BlockPlacement.builder();
-            for (String material : (List<String>) blockPlacement.get("materials")) {
-                blockPlacementBuilder.material(Material.getMaterial(material));
-            }
+            Map<?, ?> blockPlacement = getMap(section.get("blockPlacement"));
+            if (blockPlacement != null) {
+                BlockPlacement.BlockPlacementBuilder<?, ?> blockPlacementBuilder = BlockPlacement.builder();
+                for (String material : (List<String>) blockPlacement.get("materials")) {
+                    blockPlacementBuilder.material(Material.getMaterial(material));
+                }
 
-            blockPlacementBuilder.count(blockPlacement.containsKey("count") ? (int) blockPlacement.get("count") : 1);
-            builder.blockPlacement(blockPlacementBuilder.build());
+                blockPlacementBuilder.count(blockPlacement.containsKey("count") ? (int) blockPlacement.get("count") : 1);
+                builder.blockPlacement(blockPlacementBuilder.build());
+            }
+        }
+
+        if (section.containsKey("blockBreak")) {
+            Map<?, ?> blockBreak = getMap(section.get("blockBreak"));
+            if (blockBreak != null) {
+                BlockBreak.BlockBreakBuilder<?, ?> blockBreakBuilder = BlockBreak.builder();
+                for (String material : (List<String>) blockBreak.get("materials")) {
+                    blockBreakBuilder.material(Material.getMaterial(material));
+                }
+
+                blockBreakBuilder.count(blockBreak.containsKey("count") ? (int) blockBreak.get("count") : 1);
+                builder.blockBreak(blockBreakBuilder.build());
+            }
         }
 
         if (section.containsKey("entityDamage")) {
-            Map<?, ?> entityDamage = (Map<?, ?>) section.get("entityDamage");
-            EntityDamage.EntityDamageBuilder<?, ?> entityDamageBuilder = EntityDamage.builder();
-            entityDamageBuilder.id((String) entityDamage.get("id"));
-            entityDamageBuilder.type(entityDamage.containsKey("entityType") ?
-                    EntityType.valueOf((String) entityDamage.get("entityType")) : null);
-            entityDamageBuilder.displayName((String) entityDamage.get("displayName"));
-            entityDamageBuilder.location(mapLocationSelector((Map<?, ?>) entityDamage.get("location")));
+            Map<?, ?> entityDamage = getMap(section.get("entityDamage"));
+            if (entityDamage != null) {
+                EntityDamage.EntityDamageBuilder<?, ?> entityDamageBuilder = EntityDamage.builder();
+                entityDamageBuilder.id((String) entityDamage.get("id"));
+                entityDamageBuilder.type(entityDamage.containsKey("entityType") ?
+                        EntityType.valueOf((String) entityDamage.get("entityType")) : null);
+                entityDamageBuilder.displayName((String) entityDamage.get("displayName"));
 
-            builder.entityDamage(entityDamageBuilder.build());
+                if (entityDamage.containsKey("location")) {
+                    entityDamageBuilder.location(mapLocationSelector(getMap(entityDamage.get("location"))));
+                }
+
+                builder.entityDamage(entityDamageBuilder.build());
+            }
         }
 
         if (section.containsKey("advancementDone")) {
-            Map<?, ?> advancementDone = (Map<?, ?>) section.get("advancementDone");
-            AdvancementDone.AdvancementDoneBuilder<?, ?> advancementDoneBuilder = AdvancementDone.builder();
-            for (String key : (List<String>) advancementDone.get("keys")) {
-                NamespacedKey advancementKey = NamespacedKey.fromString(key);
-                assert Bukkit.getAdvancement(advancementKey) != null;
-                advancementDoneBuilder.key(NamespacedKey.fromString(key));
-            }
+            Map<?, ?> advancementDone = getMap(section.get("advancementDone"));
+            if (advancementDone != null) {
+                AdvancementDone.AdvancementDoneBuilder<?, ?> advancementDoneBuilder = AdvancementDone.builder();
+                for (String key : (List<String>) advancementDone.get("keys")) {
+                    NamespacedKey advancementKey = NamespacedKey.fromString(key);
+                    assert Bukkit.getAdvancement(advancementKey) != null;
+                    advancementDoneBuilder.key(NamespacedKey.fromString(key));
+                }
 
-            builder.advancementDone(advancementDoneBuilder.build());
+                builder.advancementDone(advancementDoneBuilder.build());
+            }
         }
 
         if (section.containsKey("inventory")) {
-            Map<?, ?> inventory = (Map<?, ?>) section.get("inventory");
-            Inventory.InventoryBuilder<?, ?> inventoryBuilder = Inventory.builder();
-            if (inventory.containsKey("displayNames")) {
-                for (String displayName : (List<String>) inventory.get("displayNames")) {
-                    inventoryBuilder.displayName(displayName);
+            Map<?, ?> inventory = getMap(section.get("inventory"));
+            if (inventory != null) {
+                Inventory.InventoryBuilder<?, ?> inventoryBuilder = Inventory.builder();
+                if (inventory.containsKey("displayNames")) {
+                    for (String displayName : (List<String>) inventory.get("displayNames")) {
+                        inventoryBuilder.displayName(displayName);
+                    }
                 }
-            }
 
-            if (inventory.containsKey("materials")) {
-                for (String material : (List<String>) inventory.get("materials")) {
-                    inventoryBuilder.material(Material.getMaterial(material));
+                if (inventory.containsKey("materials")) {
+                    for (String material : (List<String>) inventory.get("materials")) {
+                        inventoryBuilder.material(Material.getMaterial(material));
+                    }
                 }
+
+                inventoryBuilder.count(inventory.containsKey("count") ? (int) inventory.get("count") : 1);
+
+                if (inventory.containsKey("player")) {
+                    inventoryBuilder.player(mapPlayerSelector(getMap(inventory.get("player"))));
+                }
+
+                builder.inventory(inventoryBuilder.build());
             }
-
-            inventoryBuilder.count(inventory.containsKey("count") ? (int) inventory.get("count") : 1);
-
-            if (inventory.containsKey("player")) {
-                inventoryBuilder.player(mapPlayerSelector((Map<?, ?>) inventory.get("player")));
-            }
-
-            builder.inventory(inventoryBuilder.build());
         }
 
         return builder.build();
@@ -224,7 +276,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         }
 
         if (section.containsKey("location")) {
-            builder.location(mapLocationSelector((Map<?, ?>) section.get("location")));
+            builder.location(mapLocationSelector(getMap(section.get("location"))));
         }
 
         return builder.build();
@@ -236,17 +288,17 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         builder.world(section.containsKey("world") ? (String) section.get("world") : "world");
 
         if (section.containsKey("min")) {
-            Map<?, ?> min = (Map<?, ?>) section.get("min");
+            Map<?, ?> min = getMap(section.get("min"));
             builder.min(mapLocationParameters(min));
         }
 
         if (section.containsKey("max")) {
-            Map<?, ?> max = (Map<?, ?>)section.get("max");
+            Map<?, ?> max = getMap(section.get("max"));
             builder.max(mapLocationParameters(max));
         }
 
         if (section.containsKey("exact")) {
-            Map<?, ?> exact = (Map<?, ?>) section.get("exact");
+            Map<?, ?> exact = getMap(section.get("exact"));
             builder.exact(mapLocationParameters(exact));
         }
 
@@ -260,17 +312,17 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             builder.world(section.containsKey("world") ? (String) section.get("world") : "world");
 
             if (section.containsKey("min")) {
-                Map<?, ?>  min = (Map<?, ?>) section.get("min");
+                Map<?, ?>  min = getMap(section.get("min"));
                 builder.min(mapLocationParameters(min));
             }
 
             if (section.containsKey("max")) {
-                Map<?, ?>  max = (Map<?, ?>) section.get("max");
+                Map<?, ?>  max = getMap(section.get("max"));
                 builder.max(mapLocationParameters(max));
             }
 
             if (section.containsKey("exact")) {
-                Map<?, ?>  exact = (Map<?, ?>) section.get("exact");
+                Map<?, ?>  exact = getMap(section.get("exact"));
                 builder.exact(mapLocationParameters(exact));
             }
         }
@@ -316,51 +368,49 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         Actions.ActionsBuilder<?, ?> builder = Actions.builder();
 
         if (section != null) {
-            List<Map<?, ?>> loots = (List<Map<?, ?>>) section.get("loots");
-            if (loots != null) {
-                for (Map<?, ?> loot : loots) {
-                    builder.loot(mapLoot(loot));
+            if (section.containsKey("loots")) {
+                List<?> loots = (List<?>) section.get("loots");
+                for (Object loot : loots) {
+                    builder.loot(mapLoot(getMap(loot)));
                 }
             }
 
-            List<Map<?, ?>> lootTables = (List<Map<?, ?>>) section.get("lootTables");
-            if (lootTables != null) {
-                for (Map<?, ?> lootTable : lootTables) {
-                    builder.lootTable(mapLootTable(lootTable));
+            if (section.containsKey("lootTables")) {
+                List<?> lootTables = (List<?>) section.get("lootTables");
+                for (Object lootTable : lootTables) {
+                    builder.lootTable(mapLootTable(getMap(lootTable)));
                 }
             }
 
             if (section.containsKey("experience")) {
-                IntegerRange range = mapIntegerRange(((ConfigurationSection) section.get("experience")).getValues(true));
+                IntegerRange range = mapIntegerRange(getMap(section.get("experience")));
                 builder.experience(Experience.builder().min(range.getMin()).max(range.getMax()).build());
             }
 
-            List<Map<?, ?>> advancements = (List<Map<?, ?>>) section.get("advancements");
-            if (advancements != null) {
-                for (Map<?, ?> advancement : advancements) {
-                    builder.advancement(mapAdvancement(advancement));
+            if (section.containsKey("advancements")) {
+                List<?> advancements = (List<?>) section.get("advancements");
+                for (Object advancement : advancements) {
+                    builder.advancement(mapAdvancement(getMap(advancement)));
                 }
             }
 
-            ConfigurationSection title = (ConfigurationSection) section.get("title");
-            if (title != null) {
+            if (section.containsKey("title")) {
+                Map<?, ?> title = getMap(section.get("title"));
                 Title.TitleBuilder titleBuilder = Title.builder();
 
-                if (title.contains("title")) {
-                    titleBuilder.title((String) title.get("title"));
-                }
+                titleBuilder.title((String) title.get("title"));
 
-                if (title.contains("subTitle")) {
+                if (title.containsKey("subTitle")) {
                     titleBuilder.subTitle((String) title.get("subTitle"));
                 }
 
                 builder.title(titleBuilder.build());
             }
 
-            List<Map<?, ?>> commands = (List<Map<?,?>>) section.get("commands");
-            if (commands != null) {
-                for (Map<?, ?> command : commands) {
-                    builder.command(mapCommand(command));
+            if (section.containsKey("commands")) {
+                List<?> commands = (List<?>) section.get("commands");
+                for (Object command : commands) {
+                    builder.command(mapCommand(getMap(command)));
                 }
             }
         }
@@ -404,7 +454,7 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
     private Loot mapLoot(Map<?, ?> loot) {
         Loot.LootBuilder builder = Loot.builder()
                 .material(Material.getMaterial((String) loot.get("material")))
-                .count(mapIntegerRange((Map<?, ?>) loot.get("count")));
+                .count(mapIntegerRange(getMap(loot.get("count"))));
 
         if (loot.containsKey("displayName")) {
             builder.displayName((String) loot.get("displayName"));
@@ -438,5 +488,21 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         }
 
         return range.build();
+    }
+
+    private Map<?, ?> getMap(Object object) {
+        if (object == null) {
+            return null;
+        }
+
+        if (object instanceof Map) {
+            return (Map<?, ?>) object;
+        }
+
+        if (object instanceof ConfigurationSection) {
+            return ((ConfigurationSection) object).getValues(true);
+        }
+
+        throw new IllegalStateException(object.getClass() + " could not be converted to Map");
     }
 }

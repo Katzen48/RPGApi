@@ -150,6 +150,12 @@ questSteps: # All steps, that this quest has. These are not sequentially evaluat
         - WHITE_WOOL
         - BLACK_WOOL
         count: 10 # The required count of blocks, that have to be placed. All alternatives count towards that. If not provided, will be 1. Optional.
+      blockBreak: # A block, that has to be broken by the player. Optional.
+        materials: # The possible materials, that may be counted towards the completion. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html
+          # Multiple strings are possible, all are alternatives
+          - WHITE_WOOL
+          - BLACK_WOOL
+        count: 10 # The required count of blocks, that have to be broken. All alternatives count towards that. If not provided, will be 1. Optional.
       entityDamage: # An entity must be damaged, to complete this step. Optional.
         id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity. One of id, entityType, displayName or location is required.
         entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html. One of id, entityType, displayName or location is required.

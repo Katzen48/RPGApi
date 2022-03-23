@@ -82,6 +82,7 @@ public class RPGPlugin extends JavaPlugin {
         // Criteria
         getServer().getPluginManager().registerEvents(new AdvancementEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new BlockPlacementEventHandler(getQuestManager()), this);
+        getServer().getPluginManager().registerEvents(new BlockBreakEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new EntityDamageEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new EntityKillEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new ItemPickupEventHandler(getQuestManager()), this);

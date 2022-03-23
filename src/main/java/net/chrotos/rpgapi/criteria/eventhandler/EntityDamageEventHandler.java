@@ -7,6 +7,7 @@ import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
@@ -15,7 +16,7 @@ public class EntityDamageEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player)) {
             return;

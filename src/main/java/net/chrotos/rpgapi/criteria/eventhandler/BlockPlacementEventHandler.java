@@ -6,6 +6,7 @@ import net.chrotos.rpgapi.criteria.BlockPlacement;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 
@@ -14,7 +15,7 @@ public class BlockPlacementEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onBlockPlace(BlockPlaceEvent event) {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
