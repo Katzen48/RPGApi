@@ -44,6 +44,10 @@ public class QuestCriterion {
      */
     private final BlockBreak blockBreak;
     /**
+     * The blocks, to be harvested.
+     */
+    private final BlockHarvest blockHarvest;
+    /**
      * The entity damage, to be done.
      */
     private final EntityDamage entityDamage;
@@ -68,6 +72,7 @@ public class QuestCriterion {
         setThisInstance(itemUse);
         setThisInstance(blockPlacement);
         setThisInstance(blockBreak);
+        setThisInstance(blockHarvest);
         setThisInstance(entityDamage);
         setThisInstance(advancementDone);
         setThisInstance(inventory);

@@ -204,6 +204,19 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             }
         }
 
+        if (section.containsKey("blockHarvest")) {
+            Map<?, ?> blockHarvest = getMap(section.get("blockHarvest"));
+            if (blockHarvest != null) {
+                BlockHarvest.BlockHarvestBuilder<?, ?> blockHarvestBuilder = BlockHarvest.builder();
+                for (String material : (List<String>) blockHarvest.get("materials")) {
+                    blockHarvestBuilder.material(Material.getMaterial(material));
+                }
+
+                blockHarvestBuilder.count(blockHarvest.containsKey("count") ? (int) blockHarvest.get("count") : 1);
+                builder.blockHarvest(blockHarvestBuilder.build());
+            }
+        }
+
         if (section.containsKey("entityDamage")) {
             Map<?, ?> entityDamage = getMap(section.get("entityDamage"));
             if (entityDamage != null) {

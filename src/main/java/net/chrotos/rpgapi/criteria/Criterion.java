@@ -68,15 +68,15 @@ public class Criterion {
      *
      * Else checks if <code>value == required</code> and writes it to the progress of subject.
      * This is not for performance, but for displaying the progress to the subject.
-     * @param subject
-     * @param required
-     * @param value
-     * @param add
-     * @return
+     * @param subject the subject
+     * @param required the required count/amount to reach
+     * @param value the count/amount to add/deduct
+     * @param add if the value should be added or deducted
+     * @return if the required progress is reached
      */
     protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, boolean add) {
         return withProgress(subject, ((questProgress, criterionProgress) -> {
-            IntegerCriterionProgress<BlockPlacement> progress = (IntegerCriterionProgress<BlockPlacement>) criterionProgress;
+            IntegerCriterionProgress<?> progress = (IntegerCriterionProgress<?>) criterionProgress;
 
             int current = 0;
 
