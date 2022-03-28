@@ -15,7 +15,7 @@ public class LocationEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerMove(PlayerMoveEvent event) {
         if (!event.hasChangedBlock()) {
             return;

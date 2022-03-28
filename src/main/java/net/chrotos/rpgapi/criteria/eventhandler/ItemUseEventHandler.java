@@ -15,7 +15,7 @@ public class ItemUseEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (!event.getAction().isRightClick() || !event.hasItem()) {
             return;

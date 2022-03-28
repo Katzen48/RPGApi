@@ -16,7 +16,7 @@ public class ItemPickupEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
         if (!(event.getEntity() instanceof Player)) {
             return;

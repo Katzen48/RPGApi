@@ -15,7 +15,7 @@ public class AdvancementEventHandler implements Listener {
     @NonNull
     private final QuestManager questManager;
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPlayerAdvancementDone(PlayerAdvancementDoneEvent event) {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
