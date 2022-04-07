@@ -6,6 +6,7 @@ import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 import net.chrotos.rpgapi.quests.QuestStep;
+import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.UUID;
@@ -20,6 +21,8 @@ public interface QuestSubject {
      */
     @NonNull
     UUID getUniqueId();
+
+    void setPlayer(@NonNull Player player);
 
     /**
      * @return the name of the player

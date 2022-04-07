@@ -11,9 +11,11 @@ import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RequiredArgsConstructor
 public class YamlSerializer implements SubjectSerializer<YamlStore> {
@@ -25,9 +27,9 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         FileConfiguration config = subjectStorage.getRaw(uniqueId.toString(), true);
         QuestSubject subject = QuestManager.getSubjectProvider().apply(uniqueId);
 
-        subject.setQuestProgress(Collections.synchronizedList(new ArrayList<>()));
-        subject.setActiveQuests(Collections.synchronizedList(new ArrayList<>()));
-        subject.setCompletedQuests(Collections.synchronizedList(new ArrayList<>()));
+        subject.setQuestProgress(Collections.synchronizedList(new CopyOnWriteArrayList<>()));
+        subject.setActiveQuests(Collections.synchronizedList(new CopyOnWriteArrayList<>()));
+        subject.setCompletedQuests(Collections.synchronizedList(new CopyOnWriteArrayList<>()));
 
         if (!config.contains("level") || !config.contains("completed") || !config.contains("active")
                 || !config.contains("progress")) {
@@ -69,7 +71,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         QuestProgress.QuestProgressBuilder builder = QuestProgress.builder();
         builder.quest(quest);
 
-        List<QuestStep> activeSteps = Collections.synchronizedList(new ArrayList<>());
+        List<QuestStep> activeSteps = Collections.synchronizedList(new CopyOnWriteArrayList<>());
         if (questProgress.containsKey("activeSteps")) {
             for (int step : (List<Integer>) questProgress.get("activeSteps")) {
                 activeSteps.add(mapQuestStep(step, quest));
@@ -77,7 +79,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         }
         builder.activeQuestSteps(activeSteps);
 
-        List<QuestStep> completedSteps = Collections.synchronizedList(new ArrayList<>());
+        List<QuestStep> completedSteps = Collections.synchronizedList(new CopyOnWriteArrayList<>());
         if (questProgress.containsKey("completedSteps")) {
             for (int step : (List<Integer>) questProgress.get("completedSteps")) {
                 completedSteps.add(mapQuestStep(step, quest));
@@ -85,7 +87,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         }
         builder.completedSteps(completedSteps);
 
-        List<QuestCriterion> completedQuestCriteria = Collections.synchronizedList(new ArrayList<>());
+        List<QuestCriterion> completedQuestCriteria = Collections.synchronizedList(new CopyOnWriteArrayList<>());
         if (questProgress.containsKey("completedQuestCriteria")) {
             List<Map<?, ?>> questCriteria = (List<Map<?, ?>>) questProgress.get("completedQuestCriteria");
             for (int i = 0; i < questCriteria.size(); i++) {
@@ -94,7 +96,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         }
         builder.completedQuestCriteria(completedQuestCriteria);
 
-        List<Criterion> completedCriteria = Collections.synchronizedList(new ArrayList<>());
+        List<Criterion> completedCriteria = Collections.synchronizedList(new CopyOnWriteArrayList<>());
         if (questProgress.containsKey("completedCriteria")) {
             List<Map<?, ?>> criteria = (List<Map<?, ?>>) questProgress.get("completedCriteria");
             for (int i = 0; i < criteria.size(); i++) {
@@ -103,7 +105,7 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         }
         builder.completedCriteria(completedCriteria);
 
-        List<CriterionProgress<? extends Criterion>> criterionProgresses = Collections.synchronizedList(new ArrayList<>());
+        List<CriterionProgress<? extends Criterion>> criterionProgresses = Collections.synchronizedList(new CopyOnWriteArrayList<>());
         if (questProgress.containsKey("criterionProgress")) {
             List<Map<?, ?>> criterionProgress = (List<Map<?, ?>>) questProgress.get("criterionProgress");
             for (int i = 0; i < criterionProgress.size(); i++) {
@@ -150,7 +152,6 @@ public class YamlSerializer implements SubjectSerializer<YamlStore> {
         QuestStep step = mapQuestStep((int) questCriterion.get("questStep"), quest);
 
         return step.getCriteria().get((int) questCriterion.get("questCriterion"));
-
     }
 
     private QuestStep mapQuestStep(int questStep, @NonNull Quest quest) {

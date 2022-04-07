@@ -10,6 +10,8 @@ import net.chrotos.rpgapi.subjects.CriterionProgress;
 import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.function.BiFunction;
 
@@ -113,5 +115,9 @@ public class Criterion {
                 return false;
             }
         }));
+    }
+
+    protected String getComponentAsPlain(@NonNull Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 }

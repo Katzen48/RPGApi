@@ -122,6 +122,10 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                         EntityType.valueOf((String) entityKill.get("entityType")) : null);
                 entityKillBuilder.displayName((String) entityKill.get("displayName"));
 
+                if (entityKill.containsKey("count")) {
+                    entityKillBuilder.count((int) entityKill.get("count"));
+                }
+
                 if (entityKill.containsKey("location")) {
                     entityKillBuilder.location(mapLocationSelector(getMap(entityKill.get("location"))));
                 }
@@ -225,6 +229,10 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 entityDamageBuilder.type(entityDamage.containsKey("entityType") ?
                         EntityType.valueOf((String) entityDamage.get("entityType")) : null);
                 entityDamageBuilder.displayName((String) entityDamage.get("displayName"));
+
+                if (entityDamage.containsKey("damage")) {
+                    entityDamageBuilder.damage((int) entityDamage.get("damage"));
+                }
 
                 if (entityDamage.containsKey("location")) {
                     entityDamageBuilder.location(mapLocationSelector(getMap(entityDamage.get("location"))));

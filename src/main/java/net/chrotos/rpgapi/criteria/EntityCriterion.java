@@ -31,7 +31,8 @@ public abstract class EntityCriterion extends Criterion {
     public boolean check(@NonNull QuestSubject subject, @NonNull Entity object) {
         return  (id == null || id.equals(object.getUniqueId().toString())) &&
                 (type == null || object.getType() == type) &&
-                (displayName == null || object.getName().equals(displayName)) &&
+                (displayName == null ||
+                        (object.customName() != null && getComponentAsPlain(object.customName()).equals(displayName))) &&
                 (location == null || location.equals(object.getLocation()));
     }
 }

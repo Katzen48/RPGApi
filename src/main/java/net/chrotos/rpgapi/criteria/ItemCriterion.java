@@ -26,7 +26,8 @@ public abstract class ItemCriterion extends Criterion implements Checkable<ItemS
 
     @Override
     public boolean check(@NonNull QuestSubject subject, ItemStack object) {
-        return (displayNames.isEmpty() || displayNames.contains(object.getItemMeta().getDisplayName())) &&
+        return (displayNames.isEmpty() || (object.hasItemMeta() && object.getItemMeta().displayName() != null &&
+                        displayNames.contains(getComponentAsPlain(object.getItemMeta().displayName())))) &&
                 (materials.isEmpty() || materials.contains(object.getType()));
     }
 }

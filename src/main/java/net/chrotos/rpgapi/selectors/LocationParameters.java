@@ -26,15 +26,15 @@ public class LocationParameters {
     }
 
     public boolean greaterThan(int x, int y, int z) {
-        return ((getX() == null || x < getX()) &&
-                (getY() == null || y < getY()) &&
-                (getZ() == null || z < getZ()));
+        return ((getX() == null || x <= getX()) &&
+                (getY() == null || y <= getY()) &&
+                (getZ() == null || z <= getZ()));
     }
 
     public boolean lessThan(int x, int y, int z) {
-        return ((getX() == null || x > getX()) &&
-                (getY() == null || y > getY()) &&
-                (getZ() == null || z > getZ()));
+        return ((getX() == null || x >= getX()) &&
+                (getY() == null || y >= getY()) &&
+                (getZ() == null || z >= getZ()));
     }
 
     public static boolean between(LocationParameters min, LocationParameters max, int x, int y, int z) {

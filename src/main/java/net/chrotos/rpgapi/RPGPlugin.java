@@ -13,6 +13,7 @@ import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.annotation.dependency.SoftDependency;
 import org.bukkit.plugin.java.annotation.plugin.ApiVersion;
 import org.bukkit.plugin.java.annotation.plugin.LoadOrder;
 import org.bukkit.plugin.java.annotation.plugin.Plugin;
@@ -20,6 +21,7 @@ import org.bukkit.plugin.java.annotation.plugin.author.Author;
 
 @Plugin(name = "RPGApi", version = "1.18.2")
 @Author("Katzen48")
+@SoftDependency("ChrotosCloud")
 @LoadOrder(PluginLoadOrder.POSTWORLD)
 @ApiVersion(ApiVersion.Target.v1_18)
 public class RPGPlugin extends JavaPlugin {
@@ -27,9 +29,6 @@ public class RPGPlugin extends JavaPlugin {
     private static RPGPlugin instance;
     @Getter
     private QuestManager questManager;
-    @Setter
-    @NonNull
-    private SubjectStorage subjectStorage;
     @Setter
     @NonNull
     private ConfigStorage configStorage;
@@ -48,21 +47,25 @@ public class RPGPlugin extends JavaPlugin {
     public void onEnable() {
         super.onEnable();
 
-        if (subjectStorage == null) {
-            subjectStorage = new net.chrotos.rpgapi.datastorage.YamlStore(getDataFolder());
-        }
-
         if (configStorage == null) {
             configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
         }
 
-        questManager = new QuestManager(getLogger(), subjectStorage, configStorage, new NPCLoader(this));
+        questManager = new QuestManager(getLogger(), getSubjectStorage(), configStorage, new NPCLoader(this));
         questManager.getQuestGraph();
         questManager.loadNPCs();
 
         questManager.getNpcs().forEach(NPC::spawn);
 
         registerEventHandlers();
+    }
+
+    private SubjectStorage getSubjectStorage() {
+        if (getServer().getPluginManager().getPlugin("ChrotosCloud") != null) {
+            return new net.chrotos.rpgapi.datastorage.ChrotosCloudStore();
+        }
+
+        return new net.chrotos.rpgapi.datastorage.YamlStore(getDataFolder());
     }
 
     @Override

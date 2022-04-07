@@ -24,8 +24,8 @@ import java.util.*;
 public class DefaultQuestSubject implements QuestSubject {
     @NonNull
     private final UUID uniqueId;
-    @NonNull
-    private final Player player;
+    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
+    private Player player;
     @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private QuestLevel level;
     @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
@@ -37,7 +37,6 @@ public class DefaultQuestSubject implements QuestSubject {
 
     protected DefaultQuestSubject(@NonNull UUID uniqueId) {
         this.uniqueId = uniqueId;
-        this.player = Objects.requireNonNull(Bukkit.getPlayer(uniqueId));
     }
 
     @Override

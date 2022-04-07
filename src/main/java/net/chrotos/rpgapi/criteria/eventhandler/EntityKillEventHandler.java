@@ -16,7 +16,7 @@ public class EntityKillEventHandler implements Listener {
     private final QuestManager questManager;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
-    public void onEntityDamageByEntity(EntityDeathEvent event) {
+    public void onEntityDeath(EntityDeathEvent event) {
         if (event.getEntity().getKiller() == null) {
             return;
         }

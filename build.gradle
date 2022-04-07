@@ -13,6 +13,13 @@ repositories {
     maven {
         url "https://papermc.io/repo/repository/maven-public/"
     }
+    maven {
+        url "https://maven.pkg.github.com/Katzen48/chrotoscloud-v2"
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")
+            password = System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 dependencies {
@@ -22,6 +29,10 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
     testCompileOnly 'org.projectlombok:lombok:1.18.22'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    compileOnly 'net.chrotos.chrotoscloud:api:3.0-SNAPSHOT'
+    compileOnly 'net.chrotos.chrotoscloud:persistence-models:3.0-SNAPSHOT'
+    compileOnly 'net.chrotos.chrotoscloud:core:3.0-SNAPSHOT'
 
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
