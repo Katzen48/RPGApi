@@ -22,6 +22,6 @@ public class ItemUse extends ItemCriterion {
             return false;
         }
 
-        return checkIntegerProgress(subject, count, object.getAmount());
+        return checkIntegerProgress(subject, count);
     }
 }
