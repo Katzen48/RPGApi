@@ -178,9 +178,9 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerQuit(@NonNull PlayerQuitEvent event) {
-        saveQuestSubject(event.getPlayer().getUniqueId());
-        removeQuestSubject(getQuestSubject(event.getPlayer().getUniqueId()));
+    public void onPlayerQuit(@NonNull Player player) {
+        saveQuestSubject(player.getUniqueId());
+        removeQuestSubject(getQuestSubject(player.getUniqueId()));
     }
 
     // TODO move to quest class?

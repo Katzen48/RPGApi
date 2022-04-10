@@ -67,6 +67,6 @@ public class PlayerEventListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        plugin.getQuestManager().onPlayerQuit(event);
+        plugin.getQuestManager().onPlayerQuit(event.getPlayer());
     }
 }
