@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.criteria.Inventory;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -36,15 +35,13 @@ public class InventoryChangeEventHandler implements Listener {
             return;
         }
 
-        else
         onCommand(event.getSender());
     }
 
     private void onCommand(CommandSender sender) {
-        if (!(sender instanceof BlockCommandSender)) {
+        if (!(sender instanceof BlockCommandSender blockCommandSender)) {
             return;
         }
-        BlockCommandSender blockCommandSender = (BlockCommandSender) sender;
 
         blockCommandSender.getBlock().getWorld().getPlayers().forEach(player -> {
             final int[] hashCodes = new int[player.getInventory().getStorageContents().length];
@@ -56,28 +53,38 @@ public class InventoryChangeEventHandler implements Listener {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    ItemStack itemStack = null;
+                    final List<ItemStack> itemStacks = new ArrayList<>();
                     for (int i = 0; i < hashCodes.length; i++) {
                         ItemStack item = player.getInventory().getStorageContents()[i];
 
                         int hashCode = Objects.hashCode(item);
-
-                        if ((hashCode == hashCodes[i] && itemStack == null) || item == null) {
+                        if ((hashCode == hashCodes[i]) || item == null) {
                             continue;
                         }
 
-                        if (itemStack == null) {
-                            itemStack = item.clone();
+                        if (itemStacks.stream().anyMatch(itemStack -> itemStack.getType() == item.getType())) {
                             continue;
                         }
 
-                        if (itemStack.getType() == item.getType()) {
-                            itemStack.add(item.getAmount());
-                        }
+                        ItemStack itemStack = item.asOne();
+                        itemStack.setType(item.getType());
+                        itemStacks.add(itemStack);
                     }
 
-                    if (itemStack != null) {
-                        checkCompletance(player, itemStack);
+                    if (!itemStacks.isEmpty()) {
+                        for (int i = 0; i < hashCodes.length; i++) {
+                            ItemStack item = player.getInventory().getStorageContents()[i];
+                            if (item == null) {
+                                continue;
+                            }
+
+                            Optional<ItemStack> itemStack = itemStacks.stream()
+                                    .filter(itemStack1 -> itemStack1.getType() == item.getType()).findFirst();
+
+                            itemStack.ifPresent(stack -> stack.setAmount(item.getAmount() + stack.getAmount()));
+                        }
+
+                        itemStacks.forEach(itemStack -> checkCompletance(player, itemStack.subtract()));
                     }
                 }
             }.runTaskLater(plugin, 0L);
