@@ -174,16 +174,27 @@ public class DefaultQuestSubject implements QuestSubject {
             return;
         }
 
-        LegacyComponentSerializer serializer = LegacyComponentSerializer.builder().build();
+        Component titleText = deserializeText(title);
         Component subTitleComponent;
-
         if (subTitle == null) {
             subTitleComponent = Component.empty();
         } else {
-            subTitleComponent = serializer.deserialize(subTitle);
+            subTitleComponent = deserializeText(subTitle);
         }
 
-        player.showTitle(net.kyori.adventure.title.Title.title(serializer.deserialize(title), subTitleComponent)); // TODO i18n
+        player.showTitle(net.kyori.adventure.title.Title.title(titleText, subTitleComponent)); // TODO i18n
+
+        if (subTitle != null) {
+            player.sendMessage(titleText.append(Component.text(": ").append(subTitleComponent)));
+        } else {
+            player.sendMessage(titleText);
+        }
+    }
+
+    private Component deserializeText(@NonNull String text) {
+        LegacyComponentSerializer serializer = LegacyComponentSerializer.builder().build();
+
+        return serializer.deserialize(text);
     }
 
     public static DefaultQuestSubject create(@NonNull UUID uniqueId) {
