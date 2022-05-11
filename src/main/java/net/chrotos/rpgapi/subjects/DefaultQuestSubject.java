@@ -40,6 +40,11 @@ public class DefaultQuestSubject implements QuestSubject {
     }
 
     @Override
+    public @NonNull Locale getLocale() {
+        return player != null ? player.locale() : Locale.US;
+    }
+
+    @Override
     @NonNull
     public String getName() {
         return player.getName();

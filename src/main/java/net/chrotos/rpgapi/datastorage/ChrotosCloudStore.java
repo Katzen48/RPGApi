@@ -31,9 +31,9 @@ public class ChrotosCloudStore implements SubjectStorage {
 
     public JsonObject getRaw(@NonNull UUID uniqueId) {
         AtomicReference<GameState> state = new AtomicReference<>();
-        Cloud.getInstance().getPersistence().runInTransaction(databaseTransaction -> {
-            state.set(getGameState(uniqueId, true));
-        });
+        Cloud.getInstance().getPersistence().runInTransaction(databaseTransaction ->
+            state.set(getGameState(uniqueId, true))
+        );
 
         return gson.fromJson(state.get().getState(), JsonObject.class);
     }
@@ -65,6 +65,7 @@ public class ChrotosCloudStore implements SubjectStorage {
                         "{}");
 
                 player.getStates().add(gameState);
+                Cloud.getInstance().getPersistence().save(player);
             }
         }
 

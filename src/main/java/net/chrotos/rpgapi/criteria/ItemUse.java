@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
 import org.bukkit.inventory.ItemStack;
 
 @Getter
@@ -23,5 +25,10 @@ public class ItemUse extends ItemCriterion {
         }
 
         return checkIntegerProgress(subject, count);
+    }
+
+    @Override
+    public TranslatableComponent getGuiName() {
+        return Component.translatable("quest.criteria.item.use");
     }
 }

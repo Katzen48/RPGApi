@@ -6,6 +6,10 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import net.chrotos.rpgapi.selectors.LocationParameters;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Locale;
 
 @Getter
 @SuperBuilder
@@ -43,5 +47,10 @@ public class Location extends Criterion implements Checkable<org.bukkit.Location
         }
 
         return LocationParameters.between(min, max, x, y, z);
+    }
+
+    @Override
+    public ItemStack getGuiItemStack(Locale locale) {
+        return new ItemStack(Material.AIR);
     }
 }

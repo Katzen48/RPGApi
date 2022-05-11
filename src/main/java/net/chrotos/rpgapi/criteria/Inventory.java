@@ -6,8 +6,15 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import net.chrotos.rpgapi.selectors.Player;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 @Getter
 @SuperBuilder
@@ -34,5 +41,10 @@ public class Inventory extends ItemCriterion {
         }
 
         return checkIntegerProgress(subject, count, object.getAmount(), false);
+    }
+
+    @Override
+    public ItemStack getGuiItemStack(Locale locale) {
+        return new ItemStack(Material.AIR);
     }
 }

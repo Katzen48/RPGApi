@@ -5,6 +5,10 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Locale;
 
 @Getter
 @RequiredArgsConstructor
@@ -28,5 +32,10 @@ public class Quest extends Criterion implements Checkable<net.chrotos.rpgapi.que
         }
 
         return subject.getCompletedQuests().contains(quest);
+    }
+
+    @Override
+    public ItemStack getGuiItemStack(Locale locale) {
+        return new ItemStack(Material.AIR);
     }
 }

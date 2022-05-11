@@ -54,11 +54,20 @@ public class QuestManager {
 
     @Synchronized
     public QuestSubject getQuestSubject(@NonNull UUID uniqueId) {
+        return getQuestSubject(uniqueId, false);
+    }
+
+    @Synchronized
+    public QuestSubject getQuestSubject(@NonNull UUID uniqueId, boolean load) {
         if (subjectHashMap.containsKey(uniqueId)) {
             return subjectHashMap.get(uniqueId);
         }
 
-        return loadQuestSubject(uniqueId);
+        if (load) {
+            return loadQuestSubject(uniqueId);
+        } else {
+            return null;
+        }
     }
 
     @Synchronized
@@ -145,7 +154,7 @@ public class QuestManager {
     @Synchronized
     public void onPlayerJoin(@NonNull PlayerJoinEvent event) {
         try {
-            QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId());
+            QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId(), true);
             subject.setPlayer(event.getPlayer());
             addQuestSubject(subject);
             boolean initialize = true;
@@ -180,7 +189,7 @@ public class QuestManager {
     @Synchronized
     public void onPlayerQuit(@NonNull Player player) {
         saveQuestSubject(player.getUniqueId());
-        removeQuestSubject(getQuestSubject(player.getUniqueId()));
+        removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
     }
 
     // TODO move to quest class?

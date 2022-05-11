@@ -9,6 +9,7 @@ import net.chrotos.rpgapi.quests.QuestStep;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,9 @@ public interface QuestSubject {
     UUID getUniqueId();
 
     void setPlayer(@NonNull Player player);
+
+    @NonNull
+    Locale getLocale();
 
     /**
      * @return the name of the player
