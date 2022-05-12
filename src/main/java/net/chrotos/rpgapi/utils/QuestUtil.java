@@ -8,13 +8,11 @@ import lombok.SneakyThrows;
 import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.quests.QuestCriterion;
 import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class QuestUtil {
     private static final LoadingCache<Class<?>, List<Field>> CRITERIA_FIELDS = CacheBuilder.newBuilder()

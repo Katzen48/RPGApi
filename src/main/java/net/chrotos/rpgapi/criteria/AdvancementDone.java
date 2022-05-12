@@ -43,9 +43,9 @@ public class AdvancementDone extends Criterion implements Checkable<Advancement>
         ItemStack itemStack = new ItemStack(Material.WRITTEN_BOOK);
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.displayName(Component.text(GlobalTranslator.translator()
-                .translate(getGuiName().key(), locale).format(null)));
-        meta.lore(getGuiLore());
+        meta.displayName(orFetch(getGuiDisplayName(locale),
+                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
+        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
         itemStack.setItemMeta(meta);
 
         return itemStack;

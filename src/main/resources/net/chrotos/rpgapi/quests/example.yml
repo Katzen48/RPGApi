@@ -93,6 +93,16 @@ questSteps: # All steps, that this quest has. These are not sequentially evaluat
         id: tutorial # ID of the quest. In general, this is the filename of the quest, without the file extension (.yml)
       entityKill: # An entity must be killed, to complete this step. Optional
         id: 9b78ee17-fae7-44f6-9cc3-19dc4cfa20a1 # Unique ID of the entity. One of id, entityType, displayName or location is required.
+        gui: # The appearance of this criterion in the /quest(log) gui. When not required, properties replace the plugin defaults.
+          material: DIAMOND_SWORD # The material of the item. Required for following criterion types: Quest, Location, Inventory
+          displayName: # The display name, which can be static or localized. Required for following criterion types: Quest, Location, Inventory
+            text: Kill Horses # Static text
+            key: quests.gui.criteria.kill_horses.display_name # Localized key. Files as have to be place under plugins/RPGApi/translations (PropertyResourceBundle)
+          lores: # The lores of this item.
+          - text: No! My horses! # Static text
+            key: quests.gui.criteria.kill_horses.lores.0 # Localized key. Files as have to be place under plugins/RPGApi/translations (PropertyResourceBundle)
+          - text: I will end you! # Static text
+            key: quests.gui.criteria.kill_horses.lores.1 # Localized key. Files as have to be place under plugins/RPGApi/translations (PropertyResourceBundle)
         entityType: HORSE # Type of the entity. See https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/entity/EntityType.html. One of id, entityType, displayName or location is required.
         displayName: Daniel # Name of the entity. One of id, entityType, displayName or location is required.
         location: # Location of the entity. One of id, entityType, displayName or location is required.

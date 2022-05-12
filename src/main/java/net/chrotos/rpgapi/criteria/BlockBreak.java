@@ -45,9 +45,9 @@ public class BlockBreak extends Criterion implements Checkable<Block> {
         ItemStack itemStack = new ItemStack(materials.size() == 1 ? materials.get(0) : Material.GRASS_BLOCK, count);
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.displayName(Component.text(GlobalTranslator.translator()
-                .translate(getGuiName().key(), locale).format(null)));
-        meta.lore(getGuiLore());
+        meta.displayName(orFetch(getGuiDisplayName(locale),
+                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
+        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
         itemStack.setItemMeta(meta);
 
         return itemStack;

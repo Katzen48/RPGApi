@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.gui.QuestLogGuiItem;
 import net.chrotos.rpgapi.quests.QuestCriterion;
 import net.chrotos.rpgapi.subjects.CriterionProgress;
 import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
@@ -12,8 +13,11 @@ import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 @Getter
 @Setter
@@ -24,6 +28,8 @@ public class Criterion {
      * The quest criterion, this criterion is part of.
      */
     private QuestCriterion questCriterion;
+
+    protected QuestLogGuiItem gui;
 
     protected boolean withProgress(@NonNull QuestSubject subject,
                                 @NonNull BiFunction<QuestProgress, CriterionProgress<? extends Criterion>,
@@ -119,5 +125,21 @@ public class Criterion {
 
     protected String getComponentAsPlain(@NonNull Component component) {
         return PlainTextComponentSerializer.plainText().serialize(component);
+    }
+
+    protected <E> E orFetch(E first, Supplier<E> supplier) {
+        if (first == null) {
+            return supplier.get();
+        }
+
+        return first;
+    }
+
+    protected <E> List<E> orFetch(List<E> first, Supplier<List<E>> supplier) {
+        if (first.isEmpty()) {
+            return supplier.get();
+        }
+
+        return first;
     }
 }

@@ -40,9 +40,9 @@ public class EntityKill extends EntityCriterion implements Checkable<Entity> {
         ItemStack itemStack = new ItemStack(Material.DIAMOND_SWORD);
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.displayName(Component.text(GlobalTranslator.translator()
-                .translate(getGuiName().key(), locale).format(null)));
-        meta.lore(getGuiLore());
+        meta.displayName(orFetch(getGuiDisplayName(locale),
+                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
+        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
         itemStack.setItemMeta(meta);
 
         return itemStack;

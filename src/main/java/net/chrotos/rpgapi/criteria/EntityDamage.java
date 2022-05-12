@@ -41,9 +41,9 @@ public class EntityDamage extends EntityCriterion implements Checkable<EntityDam
         ItemStack itemStack = new ItemStack(Material.IRON_SWORD);
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.displayName(Component.text(GlobalTranslator.translator()
-                .translate(getGuiName().key(), locale).format(null)));
-        meta.lore(getGuiLore());
+        meta.displayName(orFetch(getGuiDisplayName(locale),
+                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
+        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
         itemStack.setItemMeta(meta);
 
         return itemStack;

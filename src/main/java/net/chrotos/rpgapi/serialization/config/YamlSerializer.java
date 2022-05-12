@@ -6,6 +6,8 @@ import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
 import net.chrotos.rpgapi.config.YamlStore;
 import net.chrotos.rpgapi.criteria.*;
+import net.chrotos.rpgapi.gui.QuestLogGuiItem;
+import net.chrotos.rpgapi.gui.Translatable;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestCriterion;
 import net.chrotos.rpgapi.quests.QuestStep;
@@ -109,7 +111,11 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         if (section.containsKey("quest")) {
             Map<?, ?> quest = getMap(section.get("quest"));
             if (quest != null) {
-                builder.quest(new net.chrotos.rpgapi.criteria.Quest((String) quest.get("id")));
+                net.chrotos.rpgapi.criteria.Quest.QuestBuilder<?, ?> questCriterion = net.chrotos.rpgapi.criteria.Quest.builder();
+                questCriterion.id((String) quest.get("id"));
+                mapGuiForCriterion(questCriterion, quest);
+
+                builder.quest(questCriterion.build());
             }
         }
 
@@ -129,6 +135,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 if (entityKill.containsKey("location")) {
                     entityKillBuilder.location(mapLocationSelector(getMap(entityKill.get("location"))));
                 }
+
+                mapGuiForCriterion(entityKillBuilder, entityKill);
 
                 builder.entityKill(entityKillBuilder.build());
             }
@@ -156,6 +164,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                     }
                 }
 
+                mapGuiForCriterion(itemPickupBuilder, itemPickup);
+
                 itemPickupBuilder.count(itemPickup.containsKey("count") ? (int) itemPickup.get("count") : 1);
                 builder.itemPickup(itemPickupBuilder.build());
             }
@@ -177,6 +187,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                     }
                 }
 
+                mapGuiForCriterion(itemUseBuilder, itemUse);
+
                 itemUseBuilder.count(itemUse.containsKey("count") ? (int) itemUse.get("count") : 1);
                 builder.itemUse(itemUseBuilder.build());
             }
@@ -189,6 +201,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 for (String material : (List<String>) blockPlacement.get("materials")) {
                     blockPlacementBuilder.material(Material.getMaterial(material));
                 }
+
+                mapGuiForCriterion(blockPlacementBuilder, blockPlacement);
 
                 blockPlacementBuilder.count(blockPlacement.containsKey("count") ? (int) blockPlacement.get("count") : 1);
                 builder.blockPlacement(blockPlacementBuilder.build());
@@ -203,6 +217,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                     blockBreakBuilder.material(Material.getMaterial(material));
                 }
 
+                mapGuiForCriterion(blockBreakBuilder, blockBreak);
+
                 blockBreakBuilder.count(blockBreak.containsKey("count") ? (int) blockBreak.get("count") : 1);
                 builder.blockBreak(blockBreakBuilder.build());
             }
@@ -215,6 +231,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 for (String material : (List<String>) blockHarvest.get("materials")) {
                     blockHarvestBuilder.material(Material.getMaterial(material));
                 }
+
+                mapGuiForCriterion(blockHarvestBuilder, blockHarvest);
 
                 blockHarvestBuilder.count(blockHarvest.containsKey("count") ? (int) blockHarvest.get("count") : 1);
                 builder.blockHarvest(blockHarvestBuilder.build());
@@ -238,6 +256,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                     entityDamageBuilder.location(mapLocationSelector(getMap(entityDamage.get("location"))));
                 }
 
+                mapGuiForCriterion(entityDamageBuilder, entityDamage);
+
                 builder.entityDamage(entityDamageBuilder.build());
             }
         }
@@ -251,6 +271,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                     assert Bukkit.getAdvancement(advancementKey) != null;
                     advancementDoneBuilder.key(NamespacedKey.fromString(key));
                 }
+
+                mapGuiForCriterion(advancementDoneBuilder, advancementDone);
 
                 builder.advancementDone(advancementDoneBuilder.build());
             }
@@ -277,6 +299,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
                 if (inventory.containsKey("player")) {
                     inventoryBuilder.player(mapPlayerSelector(getMap(inventory.get("player"))));
                 }
+
+                mapGuiForCriterion(inventoryBuilder, inventory);
 
                 builder.inventory(inventoryBuilder.build());
             }
@@ -322,6 +346,8 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
             Map<?, ?> exact = getMap(section.get("exact"));
             builder.exact(mapLocationParameters(exact));
         }
+
+        mapGuiForCriterion(builder, section);
 
         return builder.build();
     }
@@ -509,6 +535,55 @@ public class YamlSerializer implements QuestSerializer<YamlStore> {
         }
 
         return range.build();
+    }
+
+    private void mapGuiForCriterion(@NonNull Criterion.CriterionBuilder<?,?> criterionBuilder, @NonNull Map<?, ?> section) {
+        if (section.containsKey("gui")) {
+            criterionBuilder.gui(mapGui(getMap(section.get("gui"))));
+        }
+    }
+
+    private QuestLogGuiItem mapGui(Map<?, ?> section) {
+        if (section == null) {
+            return null;
+        }
+
+        QuestLogGuiItem.QuestLogGuiItemBuilder builder = QuestLogGuiItem.builder();
+
+        if (section.containsKey("material")) {
+            builder.material(Material.getMaterial((String) section.get("material")));
+        }
+
+        if (section.containsKey("displayName")) {
+            builder.displayName(mapTranslatable(getMap(section.get("displayName"))));
+        }
+
+        if (section.containsKey("lores")) {
+            List<?> lores = (List<?>) section.get("lores");
+            for (Object lore : lores) {
+                builder.lore(mapTranslatable(getMap(lore)));
+            }
+        }
+
+        return builder.build();
+    }
+
+    private Translatable mapTranslatable(Map<?, ?> section) {
+        if (section == null) {
+            return null;
+        }
+
+        Translatable.TranslatableBuilder builder = Translatable.builder();
+
+        if (section.containsKey("text")) {
+            builder.text((String) section.get("text"));
+        }
+
+        if (section.containsKey("key")) {
+            builder.text((String) section.get("key"));
+        }
+
+        return builder.build();
     }
 
     private Map<?, ?> getMap(Object object) {

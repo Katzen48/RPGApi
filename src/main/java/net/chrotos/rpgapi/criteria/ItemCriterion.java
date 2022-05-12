@@ -43,9 +43,9 @@ public abstract class ItemCriterion extends Criterion implements Checkable<ItemS
         ItemStack itemStack = new ItemStack(materials.size() == 1 ? materials.get(0) : Material.PLAYER_HEAD, getCount());
         ItemMeta meta = itemStack.getItemMeta();
 
-        meta.displayName(Component.text(GlobalTranslator.translator()
-                .translate(getGuiName().key(), locale).format(null)));
-        meta.lore(getGuiLore());
+        meta.displayName(orFetch(getGuiDisplayName(locale),
+                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
+        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
         itemStack.setItemMeta(meta);
 
         return itemStack;

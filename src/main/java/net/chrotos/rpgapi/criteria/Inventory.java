@@ -45,6 +45,24 @@ public class Inventory extends ItemCriterion {
 
     @Override
     public ItemStack getGuiItemStack(Locale locale) {
+        if (getGui() != null && getGui().getMaterial() != null) {
+            ItemStack itemStack = new ItemStack(getGuiMaterial());
+
+            Component displayName = getGuiDisplayName(locale);
+
+            if (displayName == null) {
+                return new ItemStack(Material.AIR);
+            }
+
+            ItemMeta meta = itemStack.getItemMeta();
+
+            meta.displayName(displayName);
+            meta.lore(getGuiLores(locale));
+            itemStack.setItemMeta(meta);
+
+            return itemStack;
+        }
+
         return new ItemStack(Material.AIR);
     }
 }
