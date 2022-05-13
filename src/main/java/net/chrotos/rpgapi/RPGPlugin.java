@@ -8,6 +8,7 @@ import net.chrotos.rpgapi.commands.QuestCommand;
 import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.eventhandler.*;
 import net.chrotos.rpgapi.datastorage.SubjectStorage;
+import net.chrotos.rpgapi.listener.CitizensEventListener;
 import net.chrotos.rpgapi.listener.NPCEventListener;
 import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
@@ -40,6 +41,7 @@ import java.util.zip.ZipInputStream;
 @Plugin(name = "RPGApi", version = "1.18.2")
 @Author("Katzen48")
 @SoftDependency("ChrotosCloud")
+@SoftDependency("Citizens")
 @LoadOrder(PluginLoadOrder.POSTWORLD)
 @ApiVersion(ApiVersion.Target.v1_18)
 @Commands(@Command(name = "quest", aliases = {"questlog"}))
@@ -78,7 +80,11 @@ public class RPGPlugin extends JavaPlugin {
         questManager.getQuestGraph();
         questManager.loadNPCs();
 
-        questManager.getNpcs().forEach(NPC::spawn);
+        questManager.getNpcs().stream().filter(npc -> npc.getCitizens() == null).forEach(NPC::spawn);
+
+        if (isCitizensEnabled()) {
+            questManager.getNpcs().stream().filter(npc -> npc.getCitizens() != null).forEach(NPC::spawn);
+        }
 
         registerEventHandlers();
         registerCommands();
@@ -121,6 +127,11 @@ public class RPGPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemUseEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new LocationEventHandler(getQuestManager()), this);
         getServer().getPluginManager().registerEvents(new InventoryChangeEventHandler(this), this);
+
+        // Citizens
+        if (getServer().getPluginManager().getPlugin("Citizens") != null) {
+            getServer().getPluginManager().registerEvents(new CitizensEventListener(this), this);
+        }
     }
 
     private void initializeTranslations() {
@@ -176,5 +187,19 @@ public class RPGPlugin extends JavaPlugin {
         });
 
         GlobalTranslator.translator().addSource(translationRegistry);
+    }
+
+    private boolean isCitizensLoaded() {
+        return getCitizens() != null;
+    }
+
+    private boolean isCitizensEnabled() {
+        org.bukkit.plugin.Plugin plugin = getCitizens();
+
+        return plugin != null && plugin.isEnabled();
+    }
+
+    private org.bukkit.plugin.Plugin getCitizens() {
+        return getServer().getPluginManager().getPlugin("Citizens");
     }
 }

@@ -2,12 +2,14 @@ package net.chrotos.rpgapi.npc;
 
 import lombok.*;
 import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.npc.citizens.CitizensTrait;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.scheduler.BukkitTask;
@@ -29,9 +31,12 @@ public class NPC implements AutoCloseable {
      */
     private final String displayName;
     /**
+     * Configuration of the "Citizens2" npc. Requires the Citizens2 plugin.
+     */
+    private final CitizensTrait citizens;
+    /**
      * The profession of the villager.
      */
-    @NonNull
     private final Villager.Profession profession;
     /**
      * The location, this NPC will be spawned.
@@ -56,8 +61,9 @@ public class NPC implements AutoCloseable {
     private static double entityTrackingRange = 32;
 
     @Builder
-    public NPC(@NonNull RPGPlugin plugin, @NonNull String id, String displayName, @NonNull Villager.Profession profession,
-               @NonNull Location location, Material blockMarkerMaterial, @NonNull @Singular("quest") List<Quest> quests) {
+    public NPC(@NonNull RPGPlugin plugin, @NonNull String id, String displayName, Villager.Profession profession,
+               @NonNull Location location, Material blockMarkerMaterial, @NonNull @Singular("quest") List<Quest> quests,
+               CitizensTrait citizens) {
         this.plugin = plugin;
         this.id = id;
         this.displayName = displayName;
@@ -65,17 +71,55 @@ public class NPC implements AutoCloseable {
         this.location = location;
         this.blockMarkerMaterial = blockMarkerMaterial;
         this.quests = quests;
+        this.citizens = citizens;
     }
 
     public void spawn() {
+        if (citizens == null) {
+            spawnVillager();
+        } else {
+            if (citizens.getCitizen() != null) {
+                reset(citizens.getCitizen().getEntity());
+            }
+            citizens.spawn(this);
+        }
+
+        if (blockMarkerMaterial == null) {
+            return;
+        }
+
+        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            if ((citizens == null || citizens.getCitizen() == null || !citizens.getCitizen().isSpawned())
+                    && (entity == null || entity.isDead())) {
+                return;
+            }
+
+            BlockData blockData = Bukkit.createBlockData(blockMarkerMaterial);
+            Location villagerLocation = location;
+            Location blockMarkerLocation = villagerLocation.clone().add(0, 3, 0);
+
+            villagerLocation.getWorld().getNearbyEntitiesByType(Player.class, villagerLocation, entityTrackingRange).forEach(player -> {
+                QuestSubject subject = plugin.getQuestManager().getQuestSubject(player.getUniqueId());
+
+                if (subject == null) {
+                    return;
+                }
+
+                if (!hasQuest(subject)) {
+                    return;
+                }
+
+                player.spawnParticle(Particle.BLOCK_MARKER, blockMarkerLocation, 1, blockData);
+            });
+        }, 20L, 4 * 20L);
+    }
+
+    private void spawnVillager() {
         if (entity != null && !entity.isDead() && entity.isValid()) {
             return;
         }
 
-        if (entity != null) {
-            cancelParticle();
-            despawnEntity();
-        }
+        reset(entity);
 
         location.getWorld().addPluginChunkTicket(location.getChunk().getX(), location.getChunk().getZ(), plugin);
 
@@ -94,34 +138,13 @@ public class NPC implements AutoCloseable {
             entity.customName(LegacyComponentSerializer.builder().build().deserialize(displayName));
             entity.setCustomNameVisible(true);
         }
+    }
 
-        if (blockMarkerMaterial == null) {
-            return;
+    private void reset(Entity entity) {
+        if (entity != null) {
+            cancelParticle();
+            despawnEntity();
         }
-
-        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (entity == null || entity.isDead()) {
-                return;
-            }
-
-            BlockData blockData = Bukkit.createBlockData(blockMarkerMaterial);
-            Location villagerLocation = entity.getLocation();
-            Location blockMarkerLocation = villagerLocation.clone().add(0, 3, 0);
-
-            villagerLocation.getWorld().getNearbyEntitiesByType(Player.class, villagerLocation, entityTrackingRange).forEach(player -> {
-                QuestSubject subject = plugin.getQuestManager().getQuestSubject(player.getUniqueId());
-
-                if (subject == null) {
-                    return;
-                }
-
-                if (!hasQuest(subject)) {
-                    return;
-                }
-
-                player.spawnParticle(Particle.BLOCK_MARKER, blockMarkerLocation, 1, blockData);
-            });
-        }, 20L, 4 * 20L);
     }
 
     public boolean hasQuest(@NonNull QuestSubject subject) {
@@ -147,13 +170,21 @@ public class NPC implements AutoCloseable {
     }
 
     private void despawnEntity() {
-        if (entity == null) {
-            return;
-        }
-
         try {
-            entity.setHealth(0);
-            entity.remove();
+            if (citizens == null) {
+                if (entity == null) {
+                    return;
+                }
+
+                entity.setHealth(0);
+                entity.remove();
+            } else {
+                if (citizens.getCitizen() == null) {
+                    return;
+                }
+
+                citizens.getCitizen().despawn();
+            }
         } catch (Exception ignored) {}
     }
 

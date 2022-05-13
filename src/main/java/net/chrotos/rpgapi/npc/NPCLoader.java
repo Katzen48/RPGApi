@@ -3,11 +3,14 @@ package net.chrotos.rpgapi.npc;
 import com.google.common.io.Files;
 import lombok.NonNull;
 import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.npc.citizens.CitizensTrait;
+import net.chrotos.rpgapi.npc.citizens.Skin;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Villager;
 
 import java.io.*;
@@ -46,8 +49,44 @@ public class NPCLoader {
             builder.blockMarkerMaterial(Material.matchMaterial(config.getString("blockMarkerMaterial")));
         }
 
+        if (config.contains("citizens")) {
+            builder.citizens(mapCitizens(config.getConfigurationSection("citizens")));
+        }
+
         plugin.getQuestManager().getQuestGraph().getLevels().stream().flatMap(questLevel -> questLevel.getQuests().stream())
                 .filter(quest -> id.equals(quest.getNpc())).forEachOrdered(builder::quest);
+
+        return builder.build();
+    }
+
+    private CitizensTrait mapCitizens(@NonNull ConfigurationSection section) {
+        CitizensTrait.CitizensTraitBuilder builder = CitizensTrait.builder();
+
+        if (section.contains("type")) {
+            builder.type(EntityType.valueOf(section.getString("type")));
+        }
+
+        if (section.contains("skin")) {
+            builder.skin(mapSkin(section.getConfigurationSection("skin")));
+        }
+
+        return builder.build();
+    }
+
+    private Skin mapSkin(@NonNull ConfigurationSection section) {
+        Skin.SkinBuilder builder = Skin.builder();
+
+        if (section.contains("name")) {
+            builder.name(section.getString("name"));
+        }
+
+        if (section.contains("texture")) {
+            builder.texture(section.getString("texture"));
+        }
+
+        if (section.contains("signature")) {
+            builder.signature(section.getString("signature"));
+        }
 
         return builder.build();
     }

@@ -20,6 +20,9 @@ repositories {
             password = System.getenv("GITHUB_TOKEN")
         }
     }
+    maven {
+        url "https://repo.citizensnpcs.co/"
+    }
 }
 
 dependencies {
@@ -36,7 +39,9 @@ dependencies {
 
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
+
     implementation 'com.github.stefvanschie.inventoryframework:IF:0.10.5'
+    compileOnly 'net.citizensnpcs:citizens-main:2.0.29-SNAPSHOT'
 }
 
 test {
