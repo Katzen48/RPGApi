@@ -49,6 +49,10 @@ public class NPCLoader {
             builder.blockMarkerMaterial(Material.matchMaterial(config.getString("blockMarkerMaterial")));
         }
 
+        if (config.contains("completionMarkerMaterial")) {
+            builder.completionMarkerMaterial(Material.matchMaterial(config.getString("completionMarkerMaterial")));
+        }
+
         if (config.contains("citizens")) {
             builder.citizens(mapCitizens(config.getConfigurationSection("citizens")));
         }

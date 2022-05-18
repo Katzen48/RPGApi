@@ -4,6 +4,9 @@ import lombok.*;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.npc.citizens.CitizensTrait;
 import net.chrotos.rpgapi.quests.Quest;
+import net.chrotos.rpgapi.quests.QuestCriterion;
+import net.chrotos.rpgapi.selectors.LocationParameters;
+import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
@@ -15,6 +18,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
+import java.util.function.Function;
 
 @Getter
 public class NPC implements AutoCloseable {
@@ -47,6 +51,10 @@ public class NPC implements AutoCloseable {
      * The material, that should be used for the quest marker particle, if this NPC has a block marker.
      */
     private final Material blockMarkerMaterial;
+    /***
+     * The material, that should be used for the completion quest marker particle, if this NPCS has one
+     */
+    private final Material completionMarkerMaterial;
     /**
      * The quests, this npc should start.
      */
@@ -56,13 +64,16 @@ public class NPC implements AutoCloseable {
      */
     private Villager entity;
     @Getter(AccessLevel.NONE)
-    private BukkitTask task;
+    private BukkitTask markerTask;
+    @Getter(AccessLevel.NONE)
+    private BukkitTask completionMarkerTask;
     @Setter
     private static double entityTrackingRange = 32;
 
     @Builder
     public NPC(@NonNull RPGPlugin plugin, @NonNull String id, String displayName, Villager.Profession profession,
-               @NonNull Location location, Material blockMarkerMaterial, @NonNull @Singular("quest") List<Quest> quests,
+               @NonNull Location location, Material blockMarkerMaterial, Material completionMarkerMaterial,
+               @NonNull @Singular("quest") List<Quest> quests,
                CitizensTrait citizens) {
         this.plugin = plugin;
         this.id = id;
@@ -70,6 +81,7 @@ public class NPC implements AutoCloseable {
         this.profession = profession;
         this.location = location;
         this.blockMarkerMaterial = blockMarkerMaterial;
+        this.completionMarkerMaterial = completionMarkerMaterial;
         this.quests = quests;
         this.citizens = citizens;
     }
@@ -84,19 +96,26 @@ public class NPC implements AutoCloseable {
             citizens.spawn(this);
         }
 
-        if (blockMarkerMaterial == null) {
-            return;
+        if (blockMarkerMaterial != null) {
+            markerTask = createMarkerTask(blockMarkerMaterial, this::hasQuest, plugin);
         }
 
-        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+        if (completionMarkerMaterial != null) {
+            completionMarkerTask = createMarkerTask(completionMarkerMaterial, this::hasToReturn, plugin);
+        }
+    }
+
+    private BukkitTask createMarkerTask(@NonNull Material material, @NonNull Function<QuestSubject, Boolean> checkFunction,
+                                        @NonNull RPGPlugin plugin) {
+        return Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if ((citizens == null || citizens.getCitizen() == null || !citizens.getCitizen().isSpawned())
                     && (entity == null || entity.isDead())) {
                 return;
             }
 
-            BlockData blockData = Bukkit.createBlockData(blockMarkerMaterial);
+            BlockData blockData = Bukkit.createBlockData(material);
             Location villagerLocation = location;
-            Location blockMarkerLocation = villagerLocation.clone().add(0, 3, 0);
+            Location blockMarkerLocation = villagerLocation.clone().add(0, 2.5, 0);
 
             villagerLocation.getWorld().getNearbyEntitiesByType(Player.class, villagerLocation, entityTrackingRange).forEach(player -> {
                 QuestSubject subject = plugin.getQuestManager().getQuestSubject(player.getUniqueId());
@@ -105,7 +124,7 @@ public class NPC implements AutoCloseable {
                     return;
                 }
 
-                if (!hasQuest(subject)) {
+                if (!checkFunction.apply(subject)) {
                     return;
                 }
 
@@ -151,6 +170,53 @@ public class NPC implements AutoCloseable {
         return getNextQuest(subject) != null;
     }
 
+    public boolean hasToReturn(@NonNull QuestSubject subject) {
+        if (subject.getActiveQuests().size() < 1) {
+            return false;
+        }
+
+        return subject.getActiveQuests().stream()
+                .anyMatch(quest -> {
+                    if (!quests.contains(quest)) {
+                        return false;
+                    }
+
+                    QuestProgress progress = subject.getQuestProgress().stream()
+                            .filter(questProgress -> questProgress.getQuest() == quest).findFirst().orElse(null);
+
+                    if (progress == null || progress.getCompletedSteps().size() != (quest.getSteps().size() - 1)) {
+                        return false;
+                    }
+
+                    List<QuestCriterion> lastCriteria = progress.getActiveQuestSteps().get(0).getCriteria();
+
+                    if (progress.getCompletedCriteria().size() != (lastCriteria.size() - 1)) {
+                        return false;
+                    }
+
+                    QuestCriterion lastCriterion = lastCriteria.stream()
+                            .filter(criterion -> !progress.getCompletedQuestCriteria().contains(criterion)).findFirst()
+                            .orElse(null);
+
+                    if (lastCriterion == null || lastCriterion.getLocation() == null) {
+                        return false;
+                    }
+
+                    net.chrotos.rpgapi.criteria.Location criterionLocation = lastCriterion.getLocation();
+
+                    if (!criterionLocation.getWorld().equals(location.getWorld().getName())) {
+                        return false;
+                    }
+
+                    if (criterionLocation.getExact() != null) {
+                        return criterionLocation.getExact().equal(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                    } else {
+                        return LocationParameters.between(criterionLocation.getMin(), criterionLocation.getMax(),
+                                location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                    }
+                });
+    }
+
     public Quest getNextQuest(@NonNull QuestSubject subject) {
         if (subject.getLevel() == null || subject.getActiveQuests().size() > 0 ||
                 subject.getLevel().getQuests().size() < 1) {
@@ -162,11 +228,13 @@ public class NPC implements AutoCloseable {
     }
 
     public void cancelParticle() {
-        if (task == null || task.isCancelled()) {
-            return;
+        if (markerTask != null && !markerTask.isCancelled()) {
+            markerTask.cancel();
         }
 
-        task.cancel();
+        if (completionMarkerTask != null && ! completionMarkerTask.isCancelled()) {
+            completionMarkerTask.cancel();
+        }
     }
 
     private void despawnEntity() {
