@@ -76,6 +76,7 @@ public class QuestCommand implements CommandExecutor {
             Component title = Component.translatable("quest.no_quest");
             gui = new ChestGui(1, ComponentHolder.of(title));
             StaticPane questPane = new StaticPane(4, 0, 9, 1);
+            questPane.setOnClick(inventoryClickEvent -> inventoryClickEvent.setCancelled(true));
 
             questPane.addItem(getQuestItem(null, subject.getLocale()), 0, 0);
             gui.addPane(questPane);
