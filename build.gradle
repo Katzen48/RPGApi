@@ -40,7 +40,7 @@ dependencies {
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
 
-    implementation 'com.github.stefvanschie.inventoryframework:IF:0.10.5'
+    implementation 'com.github.stefvanschie.inventoryframework:IF:0.10.6'
     compileOnly 'net.citizensnpcs:citizens-main:2.0.29-SNAPSHOT'
 }
 
