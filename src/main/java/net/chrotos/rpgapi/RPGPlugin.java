@@ -14,9 +14,11 @@ import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
+import net.chrotos.rpgapi.utils.QuestUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
+import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.java.annotation.command.Command;
@@ -61,6 +63,8 @@ public class RPGPlugin extends JavaPlugin {
         super.onLoad();
 
         instance = this;
+
+        QuestUtil.QUEST_BOOK_KEY = new NamespacedKey(this, "questbook");
 
         NPC.setEntityTrackingRange(getServer().spigot().getSpigotConfig()
                 .getDouble("world-settings.default.entity-tracking-range.other", 64));

@@ -177,9 +177,11 @@ public class NPC implements AutoCloseable {
 
         return subject.getActiveQuests().stream()
                 .anyMatch(quest -> {
+                    /*
                     if (!quests.contains(quest)) {
                         return false;
                     }
+                     */
 
                     QuestProgress progress = subject.getQuestProgress().stream()
                             .filter(questProgress -> questProgress.getQuest() == quest).findFirst().orElse(null);

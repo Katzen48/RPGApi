@@ -7,9 +7,11 @@ import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 import net.chrotos.rpgapi.quests.QuestStep;
+import net.chrotos.rpgapi.utils.QuestUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
@@ -130,6 +132,7 @@ public class DefaultQuestSubject implements QuestSubject {
     @Synchronized
     public void complete(@NonNull Quest quest) {
         award(quest.getActions());
+        removeQuestBook();
     }
 
     @Override
@@ -165,8 +168,41 @@ public class DefaultQuestSubject implements QuestSubject {
         showTitle(quest.getTitle(), quest.getSubTitle());
         getActiveQuests().add(quest);
 
+        giveQuestBook(quest);
+
         // TODO check if required quests have already been completed. Refactoring required
         questManager.checkCompletance(this, net.chrotos.rpgapi.criteria.Quest.class, null);
+    }
+
+    private void giveQuestBook(@NonNull Quest quest) {
+        ItemStack questBook = new ItemStack(Material.BOOK);
+        ItemMeta meta = questBook.getItemMeta();
+
+        if (quest.getTitle() != null) {
+            meta.displayName(deserializeText(quest.getTitle()));
+        } else {
+            meta.displayName(Component.text("Quest Log"));
+        }
+        meta.getPersistentDataContainer().set(QuestUtil.QUEST_BOOK_KEY, PersistentDataType.BYTE, (byte) 1);
+        questBook.setItemMeta(meta);
+
+        getPlayer().getInventory().addItem(questBook);
+    }
+
+    private void removeQuestBook() {
+        ArrayList<ItemStack> itemStacks = new ArrayList<>();
+
+        for (ItemStack item : getPlayer().getInventory()) {
+            if (!QuestUtil.isQuestBook(item)) {
+                continue;
+            }
+
+            itemStacks.add(item);
+        }
+
+        if (!itemStacks.isEmpty()) {
+            getPlayer().getInventory().removeItem(itemStacks.toArray(new ItemStack[itemStacks.size()]));
+        }
     }
 
     public void showTitle(String title, String subTitle) {

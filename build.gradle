@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'maven-publish'
+    id 'com.jfrog.artifactory' version '4.29.0'
 }
 
 group 'net.chrotos.rpgapi'
@@ -14,7 +15,7 @@ repositories {
         url "https://papermc.io/repo/repository/maven-public/"
     }
     maven {
-        url "https://maven.pkg.github.com/Katzen48/chrotoscloud-v2"
+        url "https://artifactory.chrotos.net/artifactory/public"
         credentials {
             username = System.getenv("GITHUB_ACTOR")
             password = System.getenv("GITHUB_TOKEN")
@@ -48,19 +49,24 @@ test {
     useJUnitPlatform()
 }
 
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/Katzen48/RPGapi")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
+artifactory {
+    contextUrl = "${chrotos_contextUrl}"
+    publish {
+        contextUrl = "${chrotos_contextUrl}"
+        repository {
+            repoKey = 'public'
+            username = "${chrotos_user}"
+            password = "${chrotos_password}"
+        }
+        defaults {
+            publications('mavenJava')
         }
     }
+}
+
+publishing {
     publications {
-        gpr(MavenPublication) { publication ->
+        mavenJava(MavenPublication) { publication ->
             artifactId = 'plugin'
             from shadow.component(publication)
         }

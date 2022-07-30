@@ -6,11 +6,13 @@ import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import net.chrotos.rpgapi.utils.QuestUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -63,6 +65,20 @@ public class PlayerEventListener implements Listener {
         } else {
             event.getPlayer().teleport(spawnLocation);
         }
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getAction().isRightClick() || !event.hasItem()) {
+            return;
+        }
+
+        if (!QuestUtil.isQuestBook(event.getItem())) {
+            return;
+        }
+
+        event.getPlayer().performCommand("rpgapi:quest");
+        event.setCancelled(true);
     }
 
     @EventHandler
