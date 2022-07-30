@@ -73,6 +73,10 @@ publishing {
     }
 }
 
+shadowJar {
+    classifier = null
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
