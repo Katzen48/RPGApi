@@ -35,6 +35,10 @@ public class ChrotosCloudStore implements SubjectStorage {
             state.set(getGameState(uniqueId, true))
         );
 
+        if (state.get() == null) {
+            return new JsonObject();
+        }
+
         return gson.fromJson(state.get().getState(), JsonObject.class);
     }
 

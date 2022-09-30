@@ -163,7 +163,7 @@ public class QuestManager {
             }
 
             checkAlreadyDone(subject);
-            saveQuestSubject(subject.getUniqueId());
+            //saveQuestSubject(subject.getUniqueId());
 
             if (initialize) {
                 subject.getActiveQuests().stream()
