@@ -7,7 +7,9 @@ import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.chrotos.rpgapi.utils.QuestUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,19 +54,25 @@ public class PlayerEventListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        plugin.getQuestManager().onPlayerJoin(event);
+        Player player = event.getPlayer();
 
-        Location spawnLocation = event.getPlayer().getBedSpawnLocation();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            plugin.getQuestManager().onPlayerJoin(player);
 
-        if (spawnLocation == null) {
-            spawnLocation = event.getPlayer().getWorld().getSpawnLocation();
-        }
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                Location spawnLocation = player.getBedSpawnLocation();
 
-        if (event.getPlayer().isInsideVehicle()) {
-            event.getPlayer().getVehicle().teleport(spawnLocation);
-        } else {
-            event.getPlayer().teleport(spawnLocation);
-        }
+                if (spawnLocation == null) {
+                    spawnLocation = player.getWorld().getSpawnLocation();
+                }
+
+                if (player.isInsideVehicle()) {
+                    player.getVehicle().teleport(spawnLocation);
+                } else {
+                    player.teleport(spawnLocation);
+                }
+            });
+        });
     }
 
     @EventHandler

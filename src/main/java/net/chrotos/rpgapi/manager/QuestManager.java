@@ -151,10 +151,10 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerJoin(@NonNull PlayerJoinEvent event) {
+    public void onPlayerJoin(@NonNull Player player) {
         try {
-            QuestSubject subject = getQuestSubject(event.getPlayer().getUniqueId(), true);
-            subject.setPlayer(event.getPlayer());
+            QuestSubject subject = getQuestSubject(player.getUniqueId(), true);
+            subject.setPlayer(player);
             addQuestSubject(subject);
             boolean initialize = true;
             if (subject.getLevel() == null) {
@@ -171,7 +171,7 @@ public class QuestManager {
                         .forEach(quest -> subject.award(quest.getInitializationActions()));
             }
         } catch (Throwable throwable) {
-            event.getPlayer().kick(Component.text("Error whilst initializing Quests!")
+            player.kick(Component.text("Error whilst initializing Quests!")
                     .color(NamedTextColor.DARK_RED));
 
             throwable.printStackTrace();
