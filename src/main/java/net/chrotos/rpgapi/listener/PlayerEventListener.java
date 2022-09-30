@@ -57,7 +57,9 @@ public class PlayerEventListener implements Listener {
         Player player = event.getPlayer();
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            plugin.getQuestManager().onPlayerJoin(player);
+            if (!plugin.getQuestManager().onPlayerJoin(player)) {
+                return;
+            }
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 Location spawnLocation = player.getBedSpawnLocation();

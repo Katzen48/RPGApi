@@ -2,6 +2,7 @@ package net.chrotos.rpgapi.manager;
 
 import com.google.common.collect.Maps;
 import lombok.*;
+import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.criteria.Checkable;
@@ -33,6 +34,8 @@ import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class QuestManager {
+    @NonNull
+    private final RPGPlugin plugin;
     private QuestGraph questGraph;
     private final Map<UUID, QuestSubject> subjectHashMap = Maps.newConcurrentMap();
     @NonNull
@@ -151,31 +154,42 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void onPlayerJoin(@NonNull Player player) {
+    public boolean onPlayerJoin(@NonNull Player player) {
         try {
             QuestSubject subject = getQuestSubject(player.getUniqueId(), true);
             subject.setPlayer(player);
             addQuestSubject(subject);
-            boolean initialize = true;
+            boolean initialize = subject.getLevel() != null;
             if (subject.getLevel() == null) {
                 completeLevel(subject);
-                initialize = false;
             }
 
-            checkAlreadyDone(subject);
-            //saveQuestSubject(subject.getUniqueId());
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                try {
+                    checkAlreadyDone(subject);
+                    //saveQuestSubject(subject.getUniqueId());
 
-            if (initialize) {
-                subject.getActiveQuests().stream()
-                        .filter(quest -> quest.getInitializationActions() != null && !quest.getInitializationActions().isOnce())
-                        .forEach(quest -> subject.award(quest.getInitializationActions()));
-            }
+                    if (initialize) {
+                        subject.getActiveQuests().stream()
+                                .filter(quest -> quest.getInitializationActions() != null && !quest.getInitializationActions().isOnce())
+                                .forEach(quest -> subject.award(quest.getInitializationActions()));
+                    }
+                } catch (Throwable throwable) {
+                   player.kick(Component.text("Error whilst initializing Quests!").color(NamedTextColor.DARK_RED));
+                   throwable.printStackTrace();
+                }
+            });
         } catch (Throwable throwable) {
-            player.kick(Component.text("Error whilst initializing Quests!")
-                    .color(NamedTextColor.DARK_RED));
+            Bukkit.getScheduler().runTask(plugin, () -> player.kick(
+                    Component.text("Error whilst initializing Quests!")
+                    .color(NamedTextColor.DARK_RED)));
 
             throwable.printStackTrace();
+
+            return false;
         }
+
+        return true;
     }
 
     @Synchronized
@@ -314,7 +328,11 @@ public class QuestManager {
 
         if(CounterLock.decrement(subject.getUniqueId()) < 1) {
             if (questStepsCompleted.get()) {
-                saveQuestSubject(subject.getUniqueId());
+                if (Bukkit.isPrimaryThread()) {
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveQuestSubject(subject.getUniqueId()));
+                } else {
+                    saveQuestSubject(subject.getUniqueId());
+                }
             }
             CounterLock.reset(subject.getUniqueId());
         }

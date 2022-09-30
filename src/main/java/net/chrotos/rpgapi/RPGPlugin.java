@@ -80,7 +80,7 @@ public class RPGPlugin extends JavaPlugin {
             configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
         }
 
-        questManager = new QuestManager(getLogger(), getSubjectStorage(), configStorage, new NPCLoader(this));
+        questManager = new QuestManager(this, getLogger(), getSubjectStorage(), configStorage, new NPCLoader(this));
         questManager.getQuestGraph();
         questManager.loadNPCs();
 
