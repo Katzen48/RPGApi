@@ -201,8 +201,10 @@ public class QuestManager {
 
     @Synchronized
     public void onPlayerQuit(@NonNull Player player) {
-        saveQuestSubject(player.getUniqueId());
-        removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            saveQuestSubject(player.getUniqueId());
+            removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
+        });
     }
 
     // TODO move to quest class?
