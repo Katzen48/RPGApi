@@ -53,6 +53,7 @@ public class CitizensEventListener implements Listener {
 
     private NPC getNPC(@NonNull NPCEvent event) {
         return plugin.getQuestManager().getNpcs().stream().
-                filter(npc -> npc.getCitizens().getCitizen() == event.getNPC()).findFirst().orElse(null);
+                filter(npc -> npc.getCitizens() != null && npc.getCitizens().getCitizen() == event.getNPC())
+                .findFirst().orElse(null);
     }
 }
