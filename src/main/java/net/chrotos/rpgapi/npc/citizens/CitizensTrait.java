@@ -13,16 +13,12 @@ import org.bukkit.entity.EntityType;
 public class CitizensTrait {
     @Builder.Default
     private final EntityType type = EntityType.PLAYER;
-    private int citizenId = -1;
+    private net.citizensnpcs.api.npc.NPC citizen;
     private Skin skin;
 
     public void spawn(NPC npc) {
-        net.citizensnpcs.api.npc.NPC citizen;
-        if (getCitizen() == null) {
+        if (citizen == null) {
             citizen = CitizensAPI.getNPCRegistry().createNPC(type, npc.getDisplayName());
-            citizenId = citizen.getId();
-        } else {
-            citizen = CitizensAPI.getNPCRegistry().getById(citizenId);
         }
         citizen.spawn(npc.getLocation());
 
@@ -41,13 +37,5 @@ public class CitizensTrait {
         lookClose.lookClose(true);
         lookClose.setRange(5D);
         lookClose.setRealisticLooking(true);
-    }
-
-    public net.citizensnpcs.api.npc.NPC getCitizen() {
-        if (citizenId == -1) {
-            return null;
-        }
-
-        return CitizensAPI.getNPCRegistry().getById(citizenId);
     }
 }

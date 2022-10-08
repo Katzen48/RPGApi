@@ -86,6 +86,14 @@ public class RPGPlugin extends JavaPlugin {
 
         questManager.getNpcs().stream().filter(npc -> npc.getCitizens() == null).forEach(NPC::spawn);
 
+        if (isCitizensEnabled()) {
+            getServer().getScheduler().runTaskLater(this, () ->
+                    questManager.getNpcs().stream()
+                                        .filter(npc -> npc.getCitizens() != null && npc.getCitizens().getCitizen() == null)
+                                        .forEach(NPC::spawn),
+                    5L);
+        }
+
         registerEventHandlers();
         registerCommands();
     }
@@ -187,5 +195,15 @@ public class RPGPlugin extends JavaPlugin {
         });
 
         GlobalTranslator.translator().addSource(translationRegistry);
+    }
+
+    private boolean isCitizensEnabled() {
+        org.bukkit.plugin.Plugin plugin = getCitizens();
+
+        return plugin != null && plugin.isEnabled();
+    }
+
+    private org.bukkit.plugin.Plugin getCitizens() {
+        return getServer().getPluginManager().getPlugin("Citizens");
     }
 }

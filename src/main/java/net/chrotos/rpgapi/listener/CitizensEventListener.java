@@ -15,12 +15,6 @@ public class CitizensEventListener implements Listener {
     private final RPGPlugin plugin;
 
     @EventHandler
-    public void onCitizensEnable(CitizensEnableEvent event) {
-        plugin.getQuestManager().getNpcs().stream()
-                .filter(npc -> npc.getCitizens() != null && npc.getCitizens().getCitizen() == null).forEach(NPC::spawn);
-    }
-
-    @EventHandler
     public void onNPCRightClick(NPCRightClickEvent event) {
         NPC npc = getNPC(event);
         if (npc == null) {
@@ -59,6 +53,6 @@ public class CitizensEventListener implements Listener {
 
     private NPC getNPC(@NonNull NPCEvent event) {
         return plugin.getQuestManager().getNpcs().stream().
-                filter(npc -> npc.getCitizens().getCitizen().getId() == event.getNPC().getId()).findFirst().orElse(null);
+                filter(npc -> npc.getCitizens().getCitizen() == event.getNPC()).findFirst().orElse(null);
     }
 }
