@@ -90,7 +90,7 @@ public class NPC implements AutoCloseable {
         if (citizens == null) {
             spawnVillager();
         } else {
-            if (citizens.getCitizenId() != -1) {
+            if (citizens.getCitizen() != null) {
                 reset(citizens.getCitizen().getEntity());
             }
             citizens.spawn(this);

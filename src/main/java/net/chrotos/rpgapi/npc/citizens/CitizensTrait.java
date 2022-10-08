@@ -18,7 +18,7 @@ public class CitizensTrait {
 
     public void spawn(NPC npc) {
         net.citizensnpcs.api.npc.NPC citizen;
-        if (citizenId == -1) {
+        if (getCitizen() == null) {
             citizen = CitizensAPI.getNPCRegistry().createNPC(type, npc.getDisplayName());
             citizenId = citizen.getId();
         } else {
