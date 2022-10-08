@@ -18,8 +18,9 @@ public class CitizensTrait {
 
     public void spawn(NPC npc) {
         if (citizen == null) {
-            citizen = CitizensAPI.getNPCRegistry().createNPC(type, npc.getDisplayName(), npc.getLocation());
+            citizen = CitizensAPI.getNPCRegistry().createNPC(type, npc.getDisplayName());
         }
+        citizen.spawn(npc.getLocation());
 
         if (skin != null) {
             SkinTrait skinTrait = citizen.getOrAddTrait(SkinTrait.class);
