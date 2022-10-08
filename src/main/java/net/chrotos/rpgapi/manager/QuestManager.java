@@ -154,7 +154,7 @@ public class QuestManager {
     }
 
     @Synchronized
-    public boolean onPlayerJoin(@NonNull Player player) {
+    public void onPlayerJoin(@NonNull Player player) {
         try {
             QuestSubject subject = getQuestSubject(player.getUniqueId(), true);
             subject.setPlayer(player);
@@ -185,11 +185,7 @@ public class QuestManager {
                     .color(NamedTextColor.DARK_RED)));
 
             throwable.printStackTrace();
-
-            return false;
         }
-
-        return true;
     }
 
     @Synchronized

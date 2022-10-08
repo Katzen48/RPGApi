@@ -57,24 +57,19 @@ public class PlayerEventListener implements Listener {
         Player player = event.getPlayer();
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            if (!plugin.getQuestManager().onPlayerJoin(player)) {
-                return;
-            }
-
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                Location spawnLocation = player.getBedSpawnLocation();
-
-                if (spawnLocation == null) {
-                    spawnLocation = player.getWorld().getSpawnLocation();
-                }
-
-                if (player.isInsideVehicle()) {
-                    player.getVehicle().teleport(spawnLocation);
-                } else {
-                    player.teleport(spawnLocation);
-                }
-            });
+            plugin.getQuestManager().onPlayerJoin(player);
         });
+
+        Location spawnLocation = player.getBedSpawnLocation();
+        if (spawnLocation == null) {
+            spawnLocation = player.getWorld().getSpawnLocation();
+        }
+
+        if (player.isInsideVehicle()) {
+            player.getVehicle().teleport(spawnLocation);
+        } else {
+            player.teleport(spawnLocation);
+        }
     }
 
     @EventHandler
