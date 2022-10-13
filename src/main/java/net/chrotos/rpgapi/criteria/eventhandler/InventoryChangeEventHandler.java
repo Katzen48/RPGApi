@@ -163,6 +163,10 @@ public class InventoryChangeEventHandler implements Listener {
     }
 
     private boolean hasActiveInventoryQuestCriterion(QuestSubject subject) {
+        if (subject == null) {
+            return false;
+        }
+
         if (subject.getActiveQuests().isEmpty()) {
             return false;
         }
