@@ -107,7 +107,7 @@ public class InventoryChangeEventHandler implements Listener {
 
     private Set<Player> parseTargetPlayers(BlockCommandSender blockCommandSender, String command) {
         Set<Player> players = new HashSet<>();
-        String giveToSubstring = parseSelector(command.substring(command.indexOf("give " + "give ".length())).trim());
+        String giveToSubstring = parseSelector(command.substring(command.indexOf("give ") + "give ".length()).trim());
 
         if (!giveToSubstring.startsWith("@")) {
             Player player = Bukkit.getPlayer(giveToSubstring);
