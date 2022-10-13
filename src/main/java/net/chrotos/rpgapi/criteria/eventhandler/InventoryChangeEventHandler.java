@@ -1,10 +1,13 @@
 package net.chrotos.rpgapi.criteria.eventhandler;
 
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.criteria.Inventory;
+import net.chrotos.rpgapi.quests.Quest;
+import net.chrotos.rpgapi.quests.QuestCriterion;
+import net.chrotos.rpgapi.quests.QuestStep;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.Bukkit;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -19,10 +22,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
-@RequiredArgsConstructor
 public class InventoryChangeEventHandler implements Listener {
-    @NonNull
     private final RPGPlugin plugin;
+    private final HashSet<Quest> relevantQuests = new HashSet<>();
+    private final HashSet<QuestStep> relevantQuestSteps = new HashSet<>();
+    private final HashSet<QuestCriterion> relevantQuestCriteria = new HashSet<>();
+
+    public InventoryChangeEventHandler(@NonNull RPGPlugin plugin) {
+        this.plugin = plugin;
+        collectRelevantQuestObjects();
+    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onEntityPickupItem(EntityPickupItemEvent event) {
@@ -35,15 +44,20 @@ public class InventoryChangeEventHandler implements Listener {
             return;
         }
 
-        onCommand(event.getSender());
+        onCommand(event.getSender(), event.getCommand());
     }
 
-    private void onCommand(CommandSender sender) {
+    private void onCommand(CommandSender sender, String command) {
         if (!(sender instanceof BlockCommandSender blockCommandSender)) {
             return;
         }
 
-        blockCommandSender.getBlock().getWorld().getPlayers().forEach(player -> {
+        parseTargetPlayers(blockCommandSender, command).forEach(player -> {
+            QuestSubject subject = plugin.getQuestManager().getQuestSubject(player.getUniqueId());
+            if (!hasActiveInventoryQuestCriterion(subject)) {
+                return;
+            }
+
             final int[] hashCodes = new int[player.getInventory().getStorageContents().length];
 
             for (int i = 0; i < hashCodes.length; i++) {
@@ -88,6 +102,101 @@ public class InventoryChangeEventHandler implements Listener {
                     }
                 }
             }.runTaskLater(plugin, 0L);
+        });
+    }
+
+    private Set<Player> parseTargetPlayers(BlockCommandSender blockCommandSender, String command) {
+        Set<Player> players = new HashSet<>();
+        String giveToSubstring = parseSelector(command.substring(command.indexOf("give " + "give ".length())).trim());
+
+        if (!giveToSubstring.startsWith("@")) {
+            Player player = Bukkit.getPlayer(giveToSubstring);
+
+            if (player != null) {
+                players.add(player);
+            }
+        } else {
+            parseSelectorSources(blockCommandSender, command).forEach(selectorSource -> {
+                Bukkit.selectEntities(selectorSource, giveToSubstring).forEach(entity -> {
+                    if (!(entity instanceof Player player)) {
+                        return;
+                    }
+
+                    players.add(player);
+                });
+            });
+        }
+
+        return players;
+    }
+
+    private List<CommandSender> parseSelectorSources(BlockCommandSender blockCommandSender, String command) {
+        ArrayList<CommandSender> entities = new ArrayList<>();
+
+        if (command.contains("execute ")) {
+            if (command.contains(" as ")) {
+                String selector = parseSelector(command.substring(command.indexOf(" as ") + " as ".length()));
+
+                if (selector.startsWith("@")) {
+                    entities.addAll(Bukkit.selectEntities(blockCommandSender, selector));
+                }
+            } else {
+                entities.add(blockCommandSender);
+            }
+        } else {
+            entities.add(blockCommandSender);
+        }
+
+        return entities;
+    }
+
+    private String parseSelector(String substring) {
+        if (!substring.startsWith("@")) {
+            return substring.substring(0, substring.indexOf(' '));
+        } else {
+            if (substring.charAt(2) == '[') {
+                return substring.substring(0, substring.indexOf("] ") + 1);
+            } else {
+                return substring.substring(0, substring.indexOf(' '));
+            }
+        }
+    }
+
+    private boolean hasActiveInventoryQuestCriterion(QuestSubject subject) {
+        if (subject.getActiveQuests().isEmpty()) {
+            return false;
+        }
+
+        return subject.getQuestProgress().stream()
+            // Check if quest is relevant
+            .anyMatch(progress -> relevantQuests.contains(progress.getQuest()) &&
+                progress.getActiveQuestSteps().stream()
+                    // Check if active quest steps are relevant
+                    .anyMatch(questStep -> relevantQuestSteps.contains(questStep)
+                        && questStep.getCriteria().stream()
+                        // Check if quest criterion is relevant
+                        .anyMatch(questCriterion -> relevantQuestCriteria.contains(questCriterion)
+                            // Check if an inventory criterion is defined
+                            && questCriterion.getInventory() != null
+                            // Check if quest criterion is completed
+                            && !progress.getCompletedQuestCriteria().contains(questCriterion)
+                            // Check if inventory criterion is completed
+                            && !progress.getCompletedCriteria().contains(questCriterion.getInventory()))));
+    }
+
+    private void collectRelevantQuestObjects() {
+        plugin.getQuestManager().getQuestGraph().getLevels().forEach(level -> {
+            level.getQuests().forEach(quest -> {
+                quest.getSteps().forEach(step -> {
+                    step.getCriteria().forEach(questCriterion -> {
+                        if (questCriterion.getInventory() != null) {
+                            relevantQuestCriteria.add(questCriterion);
+                            relevantQuestSteps.add(step);
+                            relevantQuests.add(quest);
+                        }
+                    });
+                });
+            });
         });
     }
 
