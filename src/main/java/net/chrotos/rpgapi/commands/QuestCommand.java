@@ -82,6 +82,11 @@ public class QuestCommand implements CommandExecutor {
             gui.addPane(questPane);
         }
 
+        gui.setOnGlobalClick(clickEvent -> {
+            if (clickEvent.getCursor() != null) {
+                clickEvent.setCancelled(true);
+            }
+        });
         gui.show(player);
     }
 
