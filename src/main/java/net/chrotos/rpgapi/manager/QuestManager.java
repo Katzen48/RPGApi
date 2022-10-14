@@ -166,7 +166,9 @@ public class QuestManager {
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 try {
-                    checkAlreadyDone(subject);
+                    if (checkAlreadyDone(subject)) {
+                        return;
+                    }
                     //saveQuestSubject(subject.getUniqueId());
 
                     if (initialize) {
@@ -189,10 +191,17 @@ public class QuestManager {
     }
 
     @Synchronized
-    private void checkAlreadyDone(@NonNull QuestSubject subject) {
+    private boolean checkAlreadyDone(@NonNull QuestSubject subject) {
+        Player player = Bukkit.getPlayer(subject.getUniqueId());
+        if (player == null) {
+            return false;
+        }
+
         checkCompletance(subject, AdvancementDone.class, null);
-        checkCompletance(subject, Location.class, Bukkit.getPlayer(subject.getUniqueId()).getLocation());
+        checkCompletance(subject, Location.class, player.getLocation());
         checkCompletance(subject, net.chrotos.rpgapi.criteria.Quest.class, null); // TODO fix
+
+        return true;
     }
 
     @Synchronized
