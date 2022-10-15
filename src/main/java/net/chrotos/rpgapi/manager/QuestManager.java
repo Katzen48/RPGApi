@@ -93,6 +93,15 @@ public class QuestManager {
     }
 
     @Synchronized
+    public void saveQuestSubject(Player player) {
+        if (player == null) {
+            return;
+        }
+
+        saveQuestSubject(player.getUniqueId());
+    }
+
+    @Synchronized
     public void saveQuestSubject(@NonNull UUID uniqueId) {
         QuestSubject questSubject = getQuestSubject(uniqueId);
 
@@ -206,10 +215,8 @@ public class QuestManager {
 
     @Synchronized
     public void onPlayerQuit(@NonNull Player player) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            saveQuestSubject(player.getUniqueId());
-            removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
-        });
+        saveQuestSubject(player.getUniqueId());
+        removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
     }
 
     // TODO move to quest class?
@@ -335,11 +342,7 @@ public class QuestManager {
 
         if(CounterLock.decrement(subject.getUniqueId()) < 1) {
             if (questStepsCompleted.get()) {
-                if (Bukkit.isPrimaryThread()) {
-                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> saveQuestSubject(subject.getUniqueId()));
-                } else {
-                    saveQuestSubject(subject.getUniqueId());
-                }
+                saveQuestSubject(subject.getUniqueId());
             }
             CounterLock.reset(subject.getUniqueId());
         }

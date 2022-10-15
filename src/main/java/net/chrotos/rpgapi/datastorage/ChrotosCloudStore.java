@@ -6,13 +6,17 @@ import lombok.NonNull;
 import net.chrotos.chrotoscloud.Cloud;
 import net.chrotos.chrotoscloud.games.states.CloudGameState;
 import net.chrotos.chrotoscloud.games.states.GameState;
+import net.chrotos.chrotoscloud.paper.PaperCloud;
 import net.chrotos.chrotoscloud.player.Player;
+import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.quests.QuestGraph;
 import net.chrotos.rpgapi.serialization.data.ChrotosCloudSerializer;
 import net.chrotos.rpgapi.serialization.data.SubjectSerializer;
 import net.chrotos.rpgapi.subjects.QuestSubject;
+import org.bukkit.Bukkit;
 
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ChrotosCloudStore implements SubjectStorage {
@@ -43,6 +47,16 @@ public class ChrotosCloudStore implements SubjectStorage {
     }
 
     public void save(@NonNull UUID uniqueId, @NonNull JsonObject object) {
+        ExecutorService executorService = ((PaperCloud) Cloud.getInstance()).getPlugin().getExecutorService();
+
+        if (Bukkit.isStopping() && executorService != null && !executorService.isShutdown()) {
+            executorService.execute(() -> performSave(uniqueId, object));
+        } else {
+            Bukkit.getScheduler().runTaskAsynchronously(RPGPlugin.getInstance(), () -> performSave(uniqueId, object));
+        }
+    }
+
+    private void performSave(@NonNull UUID uniqueId, @NonNull JsonObject object) {
         Cloud.getInstance().getPersistence().runInTransaction(databaseTransaction -> {
             GameState state = getGameState(uniqueId, true);
             if (state == null) {

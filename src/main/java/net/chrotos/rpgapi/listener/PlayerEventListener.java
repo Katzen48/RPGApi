@@ -88,6 +88,10 @@ public class PlayerEventListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!plugin.isEnabled()) {
+            return;
+        }
+
         plugin.getQuestManager().onPlayerQuit(event.getPlayer());
     }
 }

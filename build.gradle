@@ -37,6 +37,7 @@ dependencies {
     compileOnly 'net.chrotos.chrotoscloud:api:3.0-SNAPSHOT'
     compileOnly 'net.chrotos.chrotoscloud:persistence-models:3.0-SNAPSHOT'
     compileOnly 'net.chrotos.chrotoscloud:core:3.0-SNAPSHOT'
+    compileOnly 'net.chrotos.chrotoscloud:plugin-paper:3.0-SNAPSHOT'
 
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'

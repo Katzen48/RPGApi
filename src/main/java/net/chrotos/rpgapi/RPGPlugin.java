@@ -14,10 +14,12 @@ import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
+import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.chrotos.rpgapi.utils.QuestUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.kyori.adventure.translation.TranslationRegistry;
+import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.PluginLoadOrder;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -111,6 +113,7 @@ public class RPGPlugin extends JavaPlugin {
         super.onDisable();
 
         questManager.getNpcs().forEach(NPC::close);
+        Bukkit.getOnlinePlayers().forEach(questManager::onPlayerQuit);
     }
 
     private void registerCommands() {
