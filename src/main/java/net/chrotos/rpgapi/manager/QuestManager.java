@@ -159,14 +159,14 @@ public class QuestManager {
             QuestSubject subject = getQuestSubject(player.getUniqueId(), true);
             subject.setPlayer(player);
             addQuestSubject(subject);
-            boolean initialize = subject.getLevel() != null;
+            final boolean initialize = subject.getLevel() != null;
             if (subject.getLevel() == null) {
                 completeLevel(subject);
             }
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 try {
-                    if (checkAlreadyDone(subject)) {
+                    if (!checkAlreadyDone(subject)) {
                         return;
                     }
                     //saveQuestSubject(subject.getUniqueId());
