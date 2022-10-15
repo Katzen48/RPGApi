@@ -21,9 +21,14 @@ import org.bukkit.loot.LootContext;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.logging.Level;
 
 @Getter(onMethod = @__(@Synchronized))
 public class DefaultQuestSubject implements QuestSubject {
+    private static final Consumer<Component> COMMAND_FEEDBACK_CONSUMER = (feedback) ->
+            RPGPlugin.getInstance().getLogger().log(Level.INFO, LegacyComponentSerializer.builder().build().serialize(feedback));
+
     @NonNull
     private final UUID uniqueId;
     @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
@@ -122,7 +127,7 @@ public class DefaultQuestSubject implements QuestSubject {
     @Override
     public void award(@NonNull Command command) {
         if (command.asServer()) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.format(this));
+            Bukkit.dispatchCommand(Bukkit.getServer().createCommandSender(COMMAND_FEEDBACK_CONSUMER), command.format(this));
         } else {
             player.performCommand(command.format(this));
         }

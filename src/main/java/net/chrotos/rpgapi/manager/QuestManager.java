@@ -93,15 +93,6 @@ public class QuestManager {
     }
 
     @Synchronized
-    public void saveQuestSubject(Player player) {
-        if (player == null) {
-            return;
-        }
-
-        saveQuestSubject(player.getUniqueId());
-    }
-
-    @Synchronized
     public void saveQuestSubject(@NonNull UUID uniqueId) {
         QuestSubject questSubject = getQuestSubject(uniqueId);
 
