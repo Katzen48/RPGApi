@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'maven-publish'
-    id 'com.jfrog.artifactory' version '5.1.5'
+    id 'com.jfrog.artifactory' version '5.1.11'
 }
 
 group 'net.chrotos.rpgapi'
