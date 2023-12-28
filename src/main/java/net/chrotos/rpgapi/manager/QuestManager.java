@@ -3,12 +3,12 @@ package net.chrotos.rpgapi.manager;
 import com.google.common.collect.Maps;
 import lombok.*;
 import net.chrotos.rpgapi.RPGPlugin;
-import net.chrotos.rpgapi.config.ConfigStorage;
+import net.chrotos.rpgapi.datastorage.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.criteria.Criterion;
 import net.chrotos.rpgapi.criteria.Location;
-import net.chrotos.rpgapi.datastorage.SubjectStorage;
+import net.chrotos.rpgapi.datastorage.playerdata.SubjectStorage;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
 import net.chrotos.rpgapi.quests.Quest;
@@ -22,9 +22,9 @@ import net.chrotos.rpgapi.utils.CounterLock;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
-import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,6 +53,11 @@ public class QuestManager {
     @Setter
     @NonNull
     private static Function<UUID, ? extends QuestSubject> subjectProvider = DefaultQuestSubject::create;
+
+    public Quest getQuest(@NonNull NamespacedKey key) {
+        // TODO
+        return null;
+    }
 
     @Synchronized
     public QuestSubject getQuestSubject(@NonNull UUID uniqueId) {

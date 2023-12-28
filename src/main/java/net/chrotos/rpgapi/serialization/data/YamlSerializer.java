@@ -3,7 +3,7 @@ package net.chrotos.rpgapi.serialization.data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.criteria.Criterion;
-import net.chrotos.rpgapi.datastorage.YamlStore;
+import net.chrotos.rpgapi.datastorage.playerdata.YamlStore;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.*;
 import net.chrotos.rpgapi.subjects.CriterionProgress;
@@ -11,7 +11,6 @@ import net.chrotos.rpgapi.subjects.IntegerCriterionProgress;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.util.*;

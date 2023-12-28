@@ -6,6 +6,8 @@ import lombok.NonNull;
 import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
+import net.chrotos.rpgapi.criteria.Criteria;
+import org.bukkit.NamespacedKey;
 
 import java.util.List;
 
@@ -16,7 +18,7 @@ public class Quest {
      * Unique Identifier of the quest.
      */
     @NonNull
-    private final String id;
+    private final NamespacedKey key;
     /**
      * Name of the quest. Supports translation keys.
      */
@@ -65,4 +67,9 @@ public class Quest {
      * The actions, to be executed after activation or join
      */
     private final InitializationActions initializationActions;
+
+    public Criteria<?> getCriteria(@NonNull NamespacedKey key) {
+        // TODO
+        return null;
+    }
 }

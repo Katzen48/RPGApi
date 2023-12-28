@@ -3,7 +3,7 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'maven-publish'
-    id 'com.jfrog.artifactory' version '5.1.5'
+    id 'com.jfrog.artifactory' version '5.1.12'
 }
 
 group 'net.chrotos.rpgapi'
@@ -22,28 +22,30 @@ repositories {
         }
     }
     maven {
-        url "https://repo.citizensnpcs.co/"
+        url "https://maven.citizensnpcs.co/repo"
     }
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
 
-    compileOnly 'org.projectlombok:lombok:1.18.28'
-    annotationProcessor 'org.projectlombok:lombok:1.18.28'
-    testCompileOnly 'org.projectlombok:lombok:1.18.28'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-    compileOnly 'net.chrotos.chrotoscloud:api:3.0-SNAPSHOT'
-    compileOnly 'net.chrotos.chrotoscloud:persistence-models:3.0-SNAPSHOT'
-    compileOnly 'net.chrotos.chrotoscloud:core:3.0-SNAPSHOT'
-    compileOnly 'net.chrotos.chrotoscloud:plugin-paper:3.0-SNAPSHOT'
+    //compileOnly 'net.chrotos.chrotoscloud:api:3.0-SNAPSHOT'
+    //compileOnly 'net.chrotos.chrotoscloud:persistence-models:3.0-SNAPSHOT'
+    //compileOnly 'net.chrotos.chrotoscloud:core:3.0-SNAPSHOT'
+    //compileOnly 'net.chrotos.chrotoscloud:plugin-paper:3.0-SNAPSHOT'
 
     compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
     annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
 
-    implementation 'com.github.stefvanschie.inventoryframework:IF:0.10.11'
-    compileOnly 'net.citizensnpcs:citizens-main:2.0.32-SNAPSHOT'
+    implementation 'com.github.stefvanschie.inventoryframework:IF:0.10.12'
+    compileOnly('net.citizensnpcs:citizens-main:2.0.33-SNAPSHOT') {
+        exclude group: 'net.byteflux', module: 'libby-bukkit'
+    }
 }
 
 test {
@@ -74,10 +76,6 @@ publishing {
     }
 }
 
-shadowJar {
-    classifier = null
-}
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
@@ -90,4 +88,4 @@ task installLocalGitHook(type: Copy){
     fileMode 0775
 }
 
-build.dependsOn installLocalGitHook
+//build.dependsOn installLocalGitHook

@@ -1,20 +1,19 @@
 package net.chrotos.rpgapi;
 
-import com.google.common.io.Files;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import net.chrotos.rpgapi.commands.QuestCommand;
-import net.chrotos.rpgapi.config.ConfigStorage;
+import net.chrotos.rpgapi.datastorage.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.eventhandler.*;
-import net.chrotos.rpgapi.datastorage.SubjectStorage;
+import net.chrotos.rpgapi.datastorage.playerdata.SubjectStorage;
+import net.chrotos.rpgapi.datastorage.playerdata.YamlStore;
 import net.chrotos.rpgapi.listener.CitizensEventListener;
 import net.chrotos.rpgapi.listener.NPCEventListener;
 import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
-import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.chrotos.rpgapi.utils.QuestUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -79,7 +78,7 @@ public class RPGPlugin extends JavaPlugin {
         initializeTranslations();
 
         if (configStorage == null) {
-            configStorage = new net.chrotos.rpgapi.config.YamlStore(getDataFolder());
+            configStorage = new net.chrotos.rpgapi.datastorage.config.YamlStore(getDataFolder());
         }
 
         questManager = new QuestManager(this, getLogger(), getSubjectStorage(), configStorage, new NPCLoader(this));
@@ -105,7 +104,7 @@ public class RPGPlugin extends JavaPlugin {
             return new net.chrotos.rpgapi.datastorage.ChrotosCloudStore();
         }
 
-        return new net.chrotos.rpgapi.datastorage.YamlStore(getDataFolder());
+        return new YamlStore(getDataFolder());
     }
 
     @Override

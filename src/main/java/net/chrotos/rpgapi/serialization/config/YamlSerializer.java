@@ -4,7 +4,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.chrotos.rpgapi.actions.*;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
-import net.chrotos.rpgapi.config.YamlStore;
+import net.chrotos.rpgapi.datastorage.config.YamlStore;
 import net.chrotos.rpgapi.criteria.*;
 import net.chrotos.rpgapi.gui.QuestLogGuiItem;
 import net.chrotos.rpgapi.gui.Translatable;

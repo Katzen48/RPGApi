@@ -1,7 +1,7 @@
 package net.chrotos.rpgapi.serialization.config;
 
 import lombok.NonNull;
-import net.chrotos.rpgapi.config.ConfigStorage;
+import net.chrotos.rpgapi.datastorage.config.ConfigStorage;
 import net.chrotos.rpgapi.quests.Quest;
 
 import java.util.List;
