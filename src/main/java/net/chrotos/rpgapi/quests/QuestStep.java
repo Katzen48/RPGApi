@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
+import net.chrotos.rpgapi.criteria.Criteria;
 
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class QuestStep {
      * The Criteria for completing this quest step
      */
     @Singular("criterion")
-    private final List<QuestCriterion> criteria;
+    private final List<Criteria<?, ?>> criteria;
     /**
      * The actions, to be executed after step completion.
      */
@@ -34,7 +35,7 @@ public class QuestStep {
         assert this.quest == null;
 
         this.quest = quest;
-        for (QuestCriterion criterion : criteria) {
+        for (Criteria<?, ?> criterion : criteria) {
             criterion.setQuestStep(this);
         }
     }

@@ -1,5 +1,6 @@
 package net.chrotos.rpgapi.quests;
 
+import io.papermc.paper.advancement.AdvancementDisplay;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -7,6 +8,7 @@ import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
 import net.chrotos.rpgapi.criteria.Criteria;
+import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
 
 import java.util.List;
@@ -14,61 +16,36 @@ import java.util.List;
 @Getter
 @Builder
 public class Quest {
-    /**
-     * Unique Identifier of the quest.
-     */
     @NonNull
-    private final NamespacedKey key;
-    /**
-     * Name of the quest. Supports translation keys.
-     */
-    @NonNull
-    private final String name;
+    private NamespacedKey key;
 
-    /**
-     * The id of the quest npc.
-     */
-    private final String npc;
-    /**
-     * In which quest tab this quest should be shown
-     */
-    private final String questTab;
-    /**
-     * If the quest should stay hidden until completed
-     */
-    private final boolean hidden;
-    /**
-     * If the completed of this quest should be announced
-     */
-    private final boolean announce;
-    /**
-     * The title, to be shown on activation. Supports translation keys.
-     */
-    private final String title;
-    /**
-     * The subtitle, to be shown on activation. Supports translation keys.
-     */
-    private final String subTitle;
-    /**
-     * Level of this quest. If reached, quest becomes available.
-     * When all required quests on this level are completed, the next level becomes available
-     */
-    private final int level;
-    /**
-     * The steps for this quest
-     */
+    @NonNull
+    private final Component description;
+
+    //private final String npc;
+
+    private final AdvancementDisplay.Frame frame;
+
+    @Builder.Default
+    private final boolean hidden = false;
+
+    @Builder.Default
+    private final boolean announce = false;
+
+    private final Component title;
+
+    private final Component subTitle;
+
+    private final NamespacedKey parent;
+
     @Singular("step")
     private final List<QuestStep> steps;
-    /**
-     * The actions, to be executed after quest completion.
-     */
+
     private final Actions actions;
-    /**
-     * The actions, to be executed after activation or join
-     */
+
     private final InitializationActions initializationActions;
 
-    public Criteria<?> getCriteria(@NonNull NamespacedKey key) {
+    public Criteria<?,?> getCriteria(@NonNull NamespacedKey key) {
         // TODO
         return null;
     }

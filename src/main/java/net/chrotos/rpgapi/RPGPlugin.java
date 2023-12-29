@@ -1,19 +1,15 @@
 package net.chrotos.rpgapi;
 
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
 import net.chrotos.rpgapi.commands.QuestCommand;
+import net.chrotos.rpgapi.datastorage.backends.FileStorageBackend;
+import net.chrotos.rpgapi.datastorage.backends.StorageBackend;
 import net.chrotos.rpgapi.datastorage.config.ConfigStorage;
 import net.chrotos.rpgapi.criteria.eventhandler.*;
-import net.chrotos.rpgapi.datastorage.playerdata.SubjectStorage;
-import net.chrotos.rpgapi.datastorage.playerdata.YamlStore;
-import net.chrotos.rpgapi.listener.CitizensEventListener;
-import net.chrotos.rpgapi.listener.NPCEventListener;
+import net.chrotos.rpgapi.datastorage.config.JsonStorage;
+import net.chrotos.rpgapi.datastorage.playerdata.PlayerStorage;
 import net.chrotos.rpgapi.listener.PlayerEventListener;
 import net.chrotos.rpgapi.manager.QuestManager;
-import net.chrotos.rpgapi.npc.NPC;
-import net.chrotos.rpgapi.npc.NPCLoader;
 import net.chrotos.rpgapi.utils.QuestUtil;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -53,9 +49,11 @@ public class RPGPlugin extends JavaPlugin {
     private static RPGPlugin instance;
     @Getter
     private QuestManager questManager;
-    @Setter
-    @NonNull
+    private StorageBackend fileStorageBackend;
+    @Getter
     private ConfigStorage configStorage;
+    @Getter
+    private PlayerStorage playerStorage;
     @Getter
     private TranslationRegistry translationRegistry;
 
@@ -65,10 +63,20 @@ public class RPGPlugin extends JavaPlugin {
 
         instance = this;
 
+        fileStorageBackend = new FileStorageBackend(getDataFolder());
+
         QuestUtil.QUEST_BOOK_KEY = new NamespacedKey(this, "questbook");
 
-        NPC.setEntityTrackingRange(getServer().spigot().getSpigotConfig()
-                .getDouble("world-settings.default.entity-tracking-range.other", 64));
+        //NPC.setEntityTrackingRange(getServer().spigot().getSpigotConfig()
+        //      .getDouble("world-settings.default.entity-tracking-range.other", 64));
+
+        if (configStorage == null) {
+            configStorage = new JsonStorage(fileStorageBackend);
+        }
+
+        if (playerStorage == null) {
+            playerStorage = new net.chrotos.rpgapi.datastorage.playerdata.JsonStorage(fileStorageBackend);
+        }
     }
 
     @Override
@@ -77,16 +85,13 @@ public class RPGPlugin extends JavaPlugin {
 
         initializeTranslations();
 
-        if (configStorage == null) {
-            configStorage = new net.chrotos.rpgapi.datastorage.config.YamlStore(getDataFolder());
-        }
-
-        questManager = new QuestManager(this, getLogger(), getSubjectStorage(), configStorage, new NPCLoader(this));
+        questManager = new QuestManager(this);
         questManager.getQuestGraph();
-        questManager.loadNPCs();
+        //questManager.loadNPCs();
 
-        questManager.getNpcs().stream().filter(npc -> npc.getCitizens() == null).forEach(NPC::spawn);
+        //questManager.getNpcs().stream().filter(npc -> npc.getCitizens() == null).forEach(NPC::spawn);
 
+        /*
         if (isCitizensEnabled()) {
             getServer().getScheduler().runTaskLater(this, () ->
                     questManager.getNpcs().stream()
@@ -94,34 +99,28 @@ public class RPGPlugin extends JavaPlugin {
                                         .forEach(NPC::spawn),
                     5L);
         }
+         */
 
         registerEventHandlers();
         registerCommands();
-    }
-
-    private SubjectStorage getSubjectStorage() {
-        if (getServer().getPluginManager().getPlugin("ChrotosCloud") != null) {
-            return new net.chrotos.rpgapi.datastorage.ChrotosCloudStore();
-        }
-
-        return new YamlStore(getDataFolder());
     }
 
     @Override
     public void onDisable() {
         super.onDisable();
 
-        questManager.getNpcs().forEach(NPC::close);
+        //questManager.getNpcs().forEach(NPC::close);
         Bukkit.getOnlinePlayers().forEach(questManager::onPlayerQuit);
     }
 
     private void registerCommands() {
+        // TODO ersetzen mit Command API
         getCommand("quest").setExecutor(new QuestCommand(this));
     }
 
     private void registerEventHandlers() {
         // NPCs
-        getServer().getPluginManager().registerEvents(new NPCEventListener(this), this);
+        //getServer().getPluginManager().registerEvents(new NPCEventListener(this), this);
 
         // Player
         getServer().getPluginManager().registerEvents(new PlayerEventListener(this), this);
@@ -139,9 +138,9 @@ public class RPGPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new InventoryChangeEventHandler(this), this);
 
         // Citizens
-        if (getServer().getPluginManager().getPlugin("Citizens") != null) {
-            getServer().getPluginManager().registerEvents(new CitizensEventListener(this), this);
-        }
+        //if (getServer().getPluginManager().getPlugin("Citizens") != null) {
+        //    getServer().getPluginManager().registerEvents(new CitizensEventListener(this), this);
+        //}
     }
 
     private void initializeTranslations() {
@@ -199,6 +198,7 @@ public class RPGPlugin extends JavaPlugin {
         GlobalTranslator.translator().addSource(translationRegistry);
     }
 
+    /*
     private boolean isCitizensEnabled() {
         org.bukkit.plugin.Plugin plugin = getCitizens();
 
@@ -208,4 +208,5 @@ public class RPGPlugin extends JavaPlugin {
     private org.bukkit.plugin.Plugin getCitizens() {
         return getServer().getPluginManager().getPlugin("Citizens");
     }
+     */
 }

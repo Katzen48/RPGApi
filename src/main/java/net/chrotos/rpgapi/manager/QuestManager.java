@@ -8,7 +8,7 @@ import net.chrotos.rpgapi.criteria.AdvancementDone;
 import net.chrotos.rpgapi.criteria.Checkable;
 import net.chrotos.rpgapi.criteria.Criterion;
 import net.chrotos.rpgapi.criteria.Location;
-import net.chrotos.rpgapi.datastorage.playerdata.SubjectStorage;
+import net.chrotos.rpgapi.datastorage.playerdata.PlayerStorage;
 import net.chrotos.rpgapi.npc.NPC;
 import net.chrotos.rpgapi.npc.NPCLoader;
 import net.chrotos.rpgapi.quests.Quest;
@@ -32,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
-@RequiredArgsConstructor
 public class QuestManager {
     @NonNull
     private final RPGPlugin plugin;
@@ -41,13 +40,21 @@ public class QuestManager {
     @NonNull
     private final Logger logger;
     @NonNull
-    private final SubjectStorage subjectStorage;
+    private final PlayerStorage playerStorage;
     @NonNull
     private final ConfigStorage configStorage;
-    @NonNull
-    private final NPCLoader npcLoader;
+    //@NonNull
+    //private final NPCLoader npcLoader;
     @Getter
     private final List<NPC> npcs = Collections.synchronizedList(new ArrayList<>());
+
+    public QuestManager(@NonNull RPGPlugin plugin) {
+        this.plugin = plugin;
+        this.logger = plugin.getLogger();
+        this.playerStorage = plugin.getPlayerStorage();
+        this.configStorage = plugin.getConfigStorage();
+        //this.npcLoader = new NPCLoader(plugin);
+    }
 
     @Getter
     @Setter
@@ -94,7 +101,7 @@ public class QuestManager {
 
     @Synchronized
     public QuestSubject loadQuestSubject(@NonNull UUID uniqueId) {
-        return subjectStorage.getSubject(uniqueId, questGraph);
+        return playerStorage.getPlayerData(uniqueId, questGraph);
     }
 
     @Synchronized
@@ -105,7 +112,7 @@ public class QuestManager {
             return;
         }
 
-        subjectStorage.saveSubject(questSubject);
+        playerStorage.saveSubject(questSubject);
     }
 
     @Synchronized
@@ -130,6 +137,7 @@ public class QuestManager {
         return questGraph;
     }
 
+    /*
     @Synchronized
     public void loadNPCs() {
         npcs.addAll(npcLoader.getNPCs());
@@ -142,6 +150,7 @@ public class QuestManager {
     public NPC getNPC(@NonNull Villager villager) {
         return npcs.stream().filter(npc -> npc.getEntity() == villager).findFirst().orElse(null);
     }
+     */
 
     @Synchronized
     public Quest loadQuest(@NonNull String id) {
