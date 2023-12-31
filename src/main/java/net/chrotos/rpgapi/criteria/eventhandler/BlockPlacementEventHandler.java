@@ -20,7 +20,7 @@ public class BlockPlacementEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, BlockPlacement.class, event.getBlock());
+            subject.trigger(BlockPlacement.TYPE, BlockPlacement.class, event.getBlock().getBlockData());
         }
     }
 }

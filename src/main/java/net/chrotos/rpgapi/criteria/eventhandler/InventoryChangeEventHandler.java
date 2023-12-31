@@ -4,7 +4,6 @@ import lombok.NonNull;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.criteria.Inventory;
 import net.chrotos.rpgapi.quests.Quest;
-import net.chrotos.rpgapi.quests.QuestCriterion;
 import net.chrotos.rpgapi.quests.QuestStep;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.Bukkit;
@@ -212,7 +211,7 @@ public class InventoryChangeEventHandler implements Listener {
         QuestSubject subject = plugin.getQuestManager().getQuestSubject(entity.getUniqueId());
 
         if (subject != null) {
-            plugin.getQuestManager().checkCompletance(subject, Inventory.class, itemStack);
+            subject.trigger(Inventory.TYPE, Inventory.class, itemStack);
         }
     }
 }

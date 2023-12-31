@@ -25,7 +25,7 @@ public class EntityDamageEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getDamager().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, EntityDamage.class, event);
+            subject.trigger(EntityDamage.TYPE, EntityDamage.class, event);
         }
     }
 }

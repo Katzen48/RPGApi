@@ -2,10 +2,13 @@ package net.chrotos.rpgapi.subjects;
 
 import lombok.NonNull;
 import net.chrotos.rpgapi.actions.*;
+import net.chrotos.rpgapi.criteria.Criteria;
+import net.chrotos.rpgapi.criteria.CriteriaInstance;
 import net.chrotos.rpgapi.manager.QuestManager;
 import net.chrotos.rpgapi.quests.Quest;
 import net.chrotos.rpgapi.quests.QuestLevel;
 import net.chrotos.rpgapi.quests.QuestStep;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -41,10 +44,23 @@ public interface QuestSubject {
     @NonNull
     String getDisplayName();
 
-    void setLevel(@NonNull QuestLevel questLevel);
     void setCompletedQuests(@NonNull List<Quest> completedQuests);
     void setActiveQuests(@NonNull List<Quest> activeQuests);
     QuestProgress getQuestProgress();
+
+    default <T, A extends Criteria<T, A>, C extends CriteriaInstance<T, A>> void trigger(@NonNull C criteriaInstance, @NonNull T value) {
+        criteriaInstance.trigger(this, value);
+    }
+
+    default <T, A extends Criteria<T, A>, C extends CriteriaInstance<T, A>> void trigger(@NonNull List<C> criteriaInstances, @NonNull T value) {
+        criteriaInstances.forEach(criteriaInstance -> trigger(criteriaInstance, value));
+
+        // TODO check completance
+    }
+
+    default <T, A extends Criteria<T, A>> void trigger(@NonNull NamespacedKey type, @NonNull Class<A> clazz, @NonNull T value) {
+        trigger(getQuestProgress().getCriteriaInstances(type, clazz), value);
+    }
 
     /**
      * Synchronized method

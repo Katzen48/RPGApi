@@ -24,7 +24,7 @@ public class EntityKillEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getEntity().getKiller().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, EntityKill.class, event.getEntity());
+            subject.trigger(EntityKill.TYPE, EntityKill.class, event);
         }
     }
 }

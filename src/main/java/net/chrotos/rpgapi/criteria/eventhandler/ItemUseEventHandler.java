@@ -24,7 +24,7 @@ public class ItemUseEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, ItemUse.class, event.getItem());
+            subject.trigger(ItemUse.TYPE, ItemUse.class, event);
         }
     }
 }

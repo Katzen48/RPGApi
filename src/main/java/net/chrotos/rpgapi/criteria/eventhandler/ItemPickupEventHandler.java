@@ -25,7 +25,7 @@ public class ItemPickupEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getEntity().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, ItemPickup.class, event.getItem().getItemStack());
+            subject.trigger(ItemPickup.TYPE, ItemPickup.class, event);
         }
     }
 }

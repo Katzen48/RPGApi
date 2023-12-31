@@ -1,6 +1,5 @@
 package net.chrotos.rpgapi.criteria;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import lombok.Builder;
@@ -11,33 +10,29 @@ import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.criteria.instances.VoidInstance;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import org.bukkit.NamespacedKey;
-import org.bukkit.advancement.AdvancementProgress;
+import org.bukkit.advancement.Advancement;
 
 import java.util.List;
 
 @Getter
 @Builder
-public class AdvancementDone extends SimpleCriteria<AdvancementProgress, AdvancementDone> {
+public class AdvancementDone extends SimpleCriteria<Advancement, AdvancementDone> {
     public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "advancement");
 
     @Singular("key")
     private final List<NamespacedKey> keys;
 
-    public boolean check(@NonNull QuestSubject subject, @NonNull AdvancementProgress progress) {
-        if (!progress.isDone()) {
-            return false;
-        }
-
-        return keys.contains(progress.getAdvancement().getKey());
+    public boolean check(@NonNull QuestSubject subject, @NonNull Advancement progress) {
+        return keys.contains(progress.getKey());
     }
 
     @Override
-    public CriteriaInstance<AdvancementProgress, AdvancementDone> instanceFromJson(JsonObject json) {
+    public CriteriaInstance<Advancement, AdvancementDone> instanceFromJson(JsonObject json) {
         return new VoidInstance<>(this);
     }
 
     @Override
-    public void trigger(@NonNull QuestSubject subject, @NonNull AdvancementProgress value, @NonNull CriteriaInstance<AdvancementProgress, AdvancementDone> instance) {
+    public void trigger(@NonNull QuestSubject subject, @NonNull Advancement value, @NonNull CriteriaInstance<Advancement, AdvancementDone> instance) {
         if (check(subject, value)) {
             this.completed = true;
         }

@@ -36,7 +36,7 @@ public class QuestProgress {
     @Builder.Default
     private final ListMultimap<NamespacedKey, CriteriaInstance<?,?>> criteriaInstances = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
 
-    public <A extends Criteria<?, A>,C extends CriteriaInstance<?,A>> List<C> getCriteriaInstances(NamespacedKey key, Class<A> clazz) {
+    public <T, A extends Criteria<T, A>, C extends CriteriaInstance<T,A>> List<C> getCriteriaInstances(NamespacedKey key, Class<A> clazz) {
         return (List<C>) criteriaInstances.get(key);
     }
 }

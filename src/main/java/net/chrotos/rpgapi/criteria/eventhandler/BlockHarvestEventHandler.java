@@ -20,7 +20,7 @@ public class BlockHarvestEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, BlockHarvest.class, event.getHarvestedBlock());
+            subject.trigger(BlockHarvest.TYPE, BlockHarvest.class, event.getHarvestedBlock().getBlockData());
         }
     }
 }

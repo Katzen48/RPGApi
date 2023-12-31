@@ -20,7 +20,7 @@ public class BlockBreakEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, BlockBreak.class, event.getBlock());
+            subject.trigger(BlockBreak.TYPE, BlockBreak.class, event);
         }
     }
 }

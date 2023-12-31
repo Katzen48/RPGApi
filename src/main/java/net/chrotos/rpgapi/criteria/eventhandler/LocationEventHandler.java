@@ -24,7 +24,7 @@ public class LocationEventHandler implements Listener {
         QuestSubject subject = questManager.getQuestSubject(event.getPlayer().getUniqueId());
 
         if (subject != null) {
-            questManager.checkCompletance(subject, Location.class, event.getTo());
+            subject.trigger(Location.TYPE, Location.class, event.getTo());
         }
     }
 }
