@@ -45,6 +45,7 @@ import java.util.zip.ZipInputStream;
 @ApiVersion(ApiVersion.Target.v1_18)
 @Commands(@Command(name = "quest", aliases = {"questlog"}))
 public class RPGPlugin extends JavaPlugin {
+    public static final String DEFAULT_NAMESPACE = "rpg";
     @Getter
     private static RPGPlugin instance;
     @Getter
@@ -65,7 +66,7 @@ public class RPGPlugin extends JavaPlugin {
 
         fileStorageBackend = new FileStorageBackend(getDataFolder());
 
-        QuestUtil.QUEST_BOOK_KEY = new NamespacedKey(this, "questbook");
+        //QuestUtil.QUEST_BOOK_KEY = new NamespacedKey(this, "questbook");
 
         //NPC.setEntityTrackingRange(getServer().spigot().getSpigotConfig()
         //      .getDouble("world-settings.default.entity-tracking-range.other", 64));
@@ -77,6 +78,9 @@ public class RPGPlugin extends JavaPlugin {
         if (playerStorage == null) {
             playerStorage = new net.chrotos.rpgapi.datastorage.playerdata.JsonStorage(fileStorageBackend);
         }
+
+        questManager = new QuestManager(this);
+        questManager.loadQuests();
     }
 
     @Override
@@ -85,8 +89,6 @@ public class RPGPlugin extends JavaPlugin {
 
         initializeTranslations();
 
-        questManager = new QuestManager(this);
-        questManager.getQuestGraph();
         //questManager.loadNPCs();
 
         //questManager.getNpcs().stream().filter(npc -> npc.getCitizens() == null).forEach(NPC::spawn);
@@ -115,7 +117,7 @@ public class RPGPlugin extends JavaPlugin {
 
     private void registerCommands() {
         // TODO ersetzen mit Command API
-        getCommand("quest").setExecutor(new QuestCommand(this));
+        //getCommand("quest").setExecutor(new QuestCommand(this));
     }
 
     private void registerEventHandlers() {

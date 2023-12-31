@@ -1,10 +1,14 @@
 package net.chrotos.rpgapi.subjects;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 import lombok.*;
-import net.chrotos.rpgapi.criteria.Criterion;
+import net.chrotos.rpgapi.criteria.Criteria;
+import net.chrotos.rpgapi.criteria.CriteriaInstance;
 import net.chrotos.rpgapi.quests.Quest;
-import net.chrotos.rpgapi.quests.QuestCriterion;
 import net.chrotos.rpgapi.quests.QuestStep;
+import org.bukkit.NamespacedKey;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,34 +18,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Builder
 @RequiredArgsConstructor
 public class QuestProgress {
-    /**
-     * The active quest
-     */
+    @Setter(AccessLevel.PACKAGE)
+    private QuestSubject questSubject;
+
     @NonNull
-    private final Quest quest;
-    /**
-     * The active quest steps
-     */
+    private final List<Quest> activeQuests = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+
+    @NonNull
+    private final List<NamespacedKey> completedQuests = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+
     @Builder.Default
     private final List<QuestStep> activeQuestSteps = Collections.synchronizedList(new CopyOnWriteArrayList<>());
-    /**
-     * The already completed steps
-     */
+
     @Builder.Default
-    private final List<QuestStep> completedSteps = Collections.synchronizedList(new CopyOnWriteArrayList<>());
-    /**
-     * The already completed quest criteria. These are the criteria of the quest steps.
-     */
+    private final List<QuestStep> completedQuestSteps = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+
     @Builder.Default
-    private final List<QuestCriterion> completedQuestCriteria = Collections.synchronizedList(new CopyOnWriteArrayList<>());
-    /**
-     * The already completed criteria. These are the criteria of the quest criteria in the single quest steps.
-     */
-    @Builder.Default
-    private final List<Criterion> completedCriteria = Collections.synchronizedList(new CopyOnWriteArrayList<>());
-    /**
-     * The progress of uncompleted criteria. These are the criteria of the quest criteria in the single quest steps.
-     */
-    @Builder.Default
-    private final List<CriterionProgress<? extends Criterion>> criterionProgresses = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+    private final ListMultimap<NamespacedKey, CriteriaInstance<?,?>> criteriaInstances = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
+
+    public <A extends Criteria<?, A>,C extends CriteriaInstance<?,A>> List<C> getCriteriaInstances(NamespacedKey key, Class<A> clazz) {
+        return (List<C>) criteriaInstances.get(key);
+    }
 }

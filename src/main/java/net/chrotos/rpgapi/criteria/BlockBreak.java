@@ -1,64 +1,106 @@
 package net.chrotos.rpgapi.criteria;
 
-import lombok.Builder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.criteria.instances.IntegerInstance;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
+import org.bukkit.NamespacedKey;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 @Getter
 @SuperBuilder
-public class BlockBreak extends Criterion implements Checkable<Block> {
-    /**
-     * The materials, of the block to be broken. All are substitutes.
-     */
-    @Singular("material")
-    private final List<Material> materials;
-    /**
-     * The count, of blocks to be broken. If not set, min will be 1
-     */
-    @Builder.Default
-    private final Integer count = 1;
+public class BlockBreak extends ItemCriterion<BlockBreakEvent, BlockBreak> {
+    public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "block_break");
 
-    public boolean check(@NonNull QuestSubject subject, @NonNull Block block) {
-        if (!materials.contains(block.getBlockData().getMaterial())) {
+    @Singular("material")
+    private final List<Material> blocks;
+
+    public boolean check(@NonNull QuestSubject subject, @NonNull BlockBreakEvent event, @NonNull IntegerInstance<BlockBreakEvent, BlockBreak> instance) {
+        if (!super.check(subject, event, instance)) {
             return false;
         }
 
-        return checkIntegerProgress(subject, count);
+        for (Material material : this.blocks) {
+            if (material == event.getBlock().getType()) {
+                return checkIntegerProgress(subject, getCount(), instance);
+            }
+        }
+
+        return false;
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, @NonNull IntegerInstance<BlockBreakEvent, BlockBreak> instance) {
+        return checkIntegerProgress(subject, required, 1, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, @NonNull IntegerInstance<BlockBreakEvent, BlockBreak> instance) {
+        return checkIntegerProgress(subject, required, value, true, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, boolean add, @NonNull IntegerInstance<BlockBreakEvent, BlockBreak> instance) {
+        if (add) {
+            return instance.add(value) >= required;
+        } else {
+            return instance.deduct(value) >= required;
+        }
     }
 
     @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        ItemStack itemStack = new ItemStack(materials.size() == 1 ? materials.get(0) : Material.GRASS_BLOCK, count);
-        ItemMeta meta = itemStack.getItemMeta();
+    public CriteriaInstance<BlockBreakEvent, BlockBreak> instanceFromJson(JsonObject json) {
+        IntegerInstance<BlockBreakEvent, BlockBreak> instance = new IntegerInstance<>(this);
+        if (json != null && json.has("count")) {
+            instance.add(json.get("count").getAsInt());
+        }
 
-        meta.displayName(orFetch(getGuiDisplayName(locale),
-                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
-        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
-        itemStack.setItemMeta(meta);
-
-        return itemStack;
+        return instance;
     }
 
-    public List<Component> getGuiLore() {
-        return materials.stream().map(Component::translatable)
-                .collect(Collectors.toList());
+    @Override
+    public void trigger(@NonNull QuestSubject subject, @NonNull BlockBreakEvent value, @NonNull CriteriaInstance<BlockBreakEvent, BlockBreak> instance) {
+        if (instance instanceof IntegerInstance<BlockBreakEvent, BlockBreak> integerInstance) {
+            if (check(subject, value, integerInstance)) {
+                this.completed = true;
+            }
+        }
     }
 
-    public TranslatableComponent getGuiName() {
-        return Component.translatable("quest.criteria.block_break");
+    @Override
+    @NonNull ItemStack getItemStack(@NonNull BlockBreakEvent value) {
+        return value.getPlayer().getActiveItem();
+    }
+
+    public static BlockBreak create(@NonNull JsonObject json, @NonNull JsonDeserializationContext context) {
+        BlockBreak.BlockBreakBuilder<?,?> builder = builder();
+
+        if (json.has("materials")) {
+            json.get("materials").getAsJsonArray().forEach(element -> builder.material(Material.getMaterial(element.getAsString())));
+        }
+
+        if (json.has("display_name")) {
+            json.get("display_name").getAsJsonArray().forEach(element -> builder.displayName(element.getAsString()));
+        }
+
+        if (json.has("material")) {
+            json.get("material").getAsJsonArray().forEach(element -> builder.material(Material.getMaterial(element.getAsString())));
+        }
+
+        if (json.has("custom_model_data")) {
+            builder.customModelData(json.get("custom_model_data").getAsInt());
+        }
+
+        if (json.has("count")) {
+            builder.count(json.get("count").getAsInt());
+        }
+
+        return builder.build();
     }
 }

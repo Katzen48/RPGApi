@@ -4,6 +4,7 @@ import io.papermc.paper.advancement.AdvancementDisplay;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.Singular;
 import net.chrotos.rpgapi.actions.Actions;
 import net.chrotos.rpgapi.actions.initialization.InitializationActions;
@@ -17,7 +18,11 @@ import java.util.List;
 @Builder
 public class Quest {
     @NonNull
+    @Setter
     private NamespacedKey key;
+
+    @NonNull
+    private final Component title;
 
     @NonNull
     private final Component description;
@@ -32,8 +37,6 @@ public class Quest {
     @Builder.Default
     private final boolean announce = false;
 
-    private final Component title;
-
     private final Component subTitle;
 
     private final NamespacedKey parent;
@@ -45,8 +48,15 @@ public class Quest {
 
     private final InitializationActions initializationActions;
 
-    public Criteria<?,?> getCriteria(@NonNull NamespacedKey key) {
-        // TODO
+    public Criteria<?,?> getCriteria(@NonNull String id) {
+        for (QuestStep step : steps) {
+            for (Criteria<?, ?> criterion : step.getCriteria()) {
+                if (criterion.getId().equals(id)) {
+                    return criterion;
+                }
+            }
+        }
+
         return null;
     }
 }

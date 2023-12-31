@@ -1,22 +1,9 @@
 package net.chrotos.rpgapi.npc;
 
-import com.google.common.io.Files;
 import lombok.NonNull;
 import net.chrotos.rpgapi.RPGPlugin;
-import net.chrotos.rpgapi.npc.citizens.CitizensTrait;
-import net.chrotos.rpgapi.npc.citizens.Skin;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Villager;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class NPCLoader {
     private final RPGPlugin plugin;
@@ -26,9 +13,10 @@ public class NPCLoader {
         this.plugin = plugin;
 
         npcFolder = new File(plugin.getDataFolder(), "npcs");
-        prepareNewDir();
+        //prepareNewDir();
     }
 
+    /*
     public List<NPC> getNPCs() {
         return Arrays.stream(npcFolder.listFiles(this::isYamlFile)).map(this::map).collect(Collectors.toList());
     }
@@ -127,4 +115,5 @@ public class NPCLoader {
             e.printStackTrace();
         }
     }
+     */
 }

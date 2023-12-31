@@ -22,10 +22,10 @@ public class QuestTypeAdapter implements JsonDeserializer<Quest> {
         Quest.QuestBuilder builder = Quest.builder();
 
         builder = builder.description(context.deserialize(jsonObject.get("description"), Component.class))
+                .title(context.deserialize(jsonObject.get("title"), Component.class))
                 .frame(jsonObject.has("frame") ? AdvancementDisplay.Frame.valueOf(jsonObject.get("frame").getAsString().toUpperCase()) : AdvancementDisplay.Frame.TASK)
                 .hidden(jsonObject.has("hidden") && jsonObject.get("hidden").getAsBoolean())
                 .announce(jsonObject.has("announce") && jsonObject.get("announce").getAsBoolean())
-                .title(jsonObject.has("title") ? context.deserialize(jsonObject.get("title"), Component.class) : null)
                 .subTitle(jsonObject.has("sub_title") ? context.deserialize(jsonObject.get("sub_title"), Component.class) : null)
                 .parent(jsonObject.has("parent") ? NamespacedKey.fromString(jsonObject.get("parent").getAsString()) : null);
 

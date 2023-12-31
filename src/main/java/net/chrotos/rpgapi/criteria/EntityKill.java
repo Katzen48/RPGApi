@@ -1,68 +1,102 @@
 package net.chrotos.rpgapi.criteria;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.criteria.instances.IntegerInstance;
+import net.chrotos.rpgapi.selectors.Location;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.translation.GlobalTranslator;
-import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import org.bukkit.entity.EntityType;
+import org.bukkit.event.entity.EntityDeathEvent;
 
 @Getter
 @SuperBuilder
-public class EntityKill extends EntityCriterion implements Checkable<Entity> {
-    /**
-     * The count, of entities to be killed (requires type to be set, should not be used with id)
-     */
+public class EntityKill extends EntityCriterion<EntityDeathEvent, EntityKill> {
+    public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "entity_kill");
+
     @Builder.Default
     private final Integer count = 1;
 
     @Override
-    public boolean check(@NonNull QuestSubject subject, @NonNull Entity object) {
-        if (!super.check(subject, object)) {
+    public boolean check(@NonNull QuestSubject subject, @NonNull EntityDeathEvent object, @NonNull IntegerInstance<EntityDeathEvent, EntityKill> instance) {
+        if (!super.check(subject, object, instance)) {
             return false;
         }
 
-        return checkIntegerProgress(subject, count);
+        return checkIntegerProgress(subject, count, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, @NonNull IntegerInstance<EntityDeathEvent, EntityKill> instance) {
+        return checkIntegerProgress(subject, required, 1, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, @NonNull IntegerInstance<EntityDeathEvent, EntityKill> instance) {
+        return checkIntegerProgress(subject, required, value, true, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, boolean add, @NonNull IntegerInstance<EntityDeathEvent, EntityKill> instance) {
+        if (add) {
+            return instance.add(value) >= required;
+        } else {
+            return instance.deduct(value) >= required;
+        }
     }
 
     @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        ItemStack itemStack = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta meta = itemStack.getItemMeta();
+    public CriteriaInstance<EntityDeathEvent, EntityKill> instanceFromJson(JsonObject json) {
+        IntegerInstance<EntityDeathEvent, EntityKill> instance = new IntegerInstance<>(this);
 
-        meta.displayName(orFetch(getGuiDisplayName(locale),
-                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
-        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
-        itemStack.setItemMeta(meta);
-
-        return itemStack;
-    }
-
-    public List<Component> getGuiLore() {
-        List<Component> lore = new ArrayList<>();
-
-        if (getType() != null) {
-            lore.add(Component.text("Type: ").append(Component.translatable(getType())));
+        if (json != null && json.has("damage")) {
+            instance.add(json.get("damage").getAsInt());
         }
 
-        if (getDisplayName() != null) {
-            lore.add(Component.text("Name: " + getDisplayName()));
-        }
-
-        return lore;
+        return instance;
     }
 
-    public TranslatableComponent getGuiName() {
-        return Component.translatable("quest.criteria.entity.kill");
+    @Override
+    public void trigger(@NonNull QuestSubject subject, @NonNull EntityDeathEvent value, @NonNull CriteriaInstance<EntityDeathEvent, EntityKill> instance) {
+        if (instance instanceof IntegerInstance<EntityDeathEvent, EntityKill> integerInstance) {
+            if (check(subject, value, integerInstance)) {
+                this.completed = true;
+            }
+        }
+    }
+
+    @Override
+    @NonNull Entity getEntity(@NonNull EntityDeathEvent value) {
+        return value.getEntity();
+    }
+
+    public static EntityKill create(@NonNull JsonObject json, @NonNull JsonDeserializationContext context) {
+        EntityKill.EntityKillBuilder<?, ?> builder = builder();
+
+        if (json.has("count")) {
+            builder.count(json.get("count").getAsInt());
+        }
+
+        if (json.has("entity")) {
+            JsonObject entity = json.getAsJsonObject("entity");
+
+            if (entity.has("id")) {
+                builder.id(entity.get("id").getAsString());
+            }
+            if (entity.has("type")) {
+                builder.type(EntityType.valueOf(entity.get("type").getAsString()));
+            }
+            if (entity.has("display_name")) {
+                builder.displayName(entity.get("display_name").getAsString());
+            }
+            if (entity.has("location")) {
+                builder.location(context.deserialize(entity.get("location"), Location.class));
+            }
+        }
+
+        return builder.build();
     }
 }

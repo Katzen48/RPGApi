@@ -44,34 +44,7 @@ public interface QuestSubject {
     void setLevel(@NonNull QuestLevel questLevel);
     void setCompletedQuests(@NonNull List<Quest> completedQuests);
     void setActiveQuests(@NonNull List<Quest> activeQuests);
-    void setQuestProgress(@NonNull List<QuestProgress> questProgress);
-
-    /**
-     * Synchronized method
-     * @return the current quest level. If all quests are completed, this is increased.
-     */
-    QuestLevel getLevel();
-
-    /**
-     * Synchronized method
-     * @return all quests, that have been completed. Is used for resolution, if the quest level should be increased
-     */
-    @NonNull
-    List<Quest> getCompletedQuests();
-
-    /**
-     * Synchronized method
-     * @return all quests, that are actively been tracked.
-     */
-    @NonNull
-    List<Quest> getActiveQuests();
-
-    /**
-     * Synchronized method
-     * @return progress, of not yet completed quests. Upon quest completion, these values are removed.
-     */
-    @NonNull
-    List<QuestProgress> getQuestProgress();
+    QuestProgress getQuestProgress();
 
     /**
      * Synchronized method

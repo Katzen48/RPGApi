@@ -18,9 +18,9 @@ public class CriteriaInstanceTypeAdapter implements JsonDeserializer<CriteriaIns
     @Override
     public CriteriaInstance<?, ? extends Criteria<?, ?>> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         NamespacedKey questKey = NamespacedKey.fromString(json.getAsJsonObject().get("quest").getAsString());
-        NamespacedKey criteriaKey = NamespacedKey.fromString(json.getAsJsonObject().get("trigger").getAsString());
+        String criteriaId = json.getAsJsonObject().get("trigger").getAsString();
 
-        Criteria<?,?> criteria = RPGPlugin.getInstance().getQuestManager().getQuest(questKey).getCriteria(criteriaKey);
+        Criteria<?,?> criteria = RPGPlugin.getInstance().getQuestManager().getQuest(questKey).getCriteria(criteriaId);
 
         return criteria.instanceFromJson(json.getAsJsonObject().getAsJsonObject("data"));
     }
@@ -30,7 +30,7 @@ public class CriteriaInstanceTypeAdapter implements JsonDeserializer<CriteriaIns
         JsonObject jsonObject = new JsonObject();
 
         jsonObject.addProperty("quest", src.getCriteria().getQuest().getKey().toString());
-        jsonObject.addProperty("trigger", src.getCriteria().getKey().toString());
+        jsonObject.addProperty("trigger", src.getCriteria().getId());
         jsonObject.add("data", src.serialize());
 
         return jsonObject;

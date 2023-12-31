@@ -34,16 +34,13 @@ public class DefaultQuestSubject implements QuestSubject {
     @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
     private Player player;
     @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
-    private QuestLevel level;
-    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
-    private List<Quest> completedQuests;
-    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
-    private List<Quest> activeQuests;
-    @Setter(onMethod = @__({@Synchronized, @Override}), onParam = @__(@NonNull))
-    private List<QuestProgress> questProgress;
+    private QuestProgress questProgress;
 
-    protected DefaultQuestSubject(@NonNull UUID uniqueId) {
+    protected DefaultQuestSubject(@NonNull UUID uniqueId, QuestProgress questProgress) {
         this.uniqueId = uniqueId;
+        this.questProgress = questProgress != null ? questProgress : new QuestProgress();
+
+        this.questProgress.setQuestSubject(this);
     }
 
     @Override
@@ -148,7 +145,7 @@ public class DefaultQuestSubject implements QuestSubject {
 
     @Override
     public void activate(@NonNull Quest quest, @NonNull QuestManager questManager) {
-        if (getActiveQuests().contains(quest)) {
+        if (getQuestProgress().getActiveQuests().contains(quest)) {
             return;
         }
 
@@ -210,25 +207,22 @@ public class DefaultQuestSubject implements QuestSubject {
         }
     }
 
-    public void showTitle(String title, String subTitle) {
+    public void showTitle(Component title, Component subTitle) {
         if (title == null) {
             return;
         }
 
-        Component titleText = deserializeText(title);
-        Component subTitleComponent;
+        Component subTitleComponent = subTitle;
         if (subTitle == null) {
             subTitleComponent = Component.empty();
-        } else {
-            subTitleComponent = deserializeText(subTitle);
         }
 
-        player.showTitle(net.kyori.adventure.title.Title.title(titleText, subTitleComponent)); // TODO i18n
+        player.showTitle(net.kyori.adventure.title.Title.title(title, subTitleComponent));
 
         if (subTitle != null) {
-            player.sendMessage(titleText.append(Component.text(": ").append(subTitleComponent)));
+            player.sendMessage(title.append(Component.text(": ").append(subTitleComponent)));
         } else {
-            player.sendMessage(titleText);
+            player.sendMessage(title);
         }
     }
 
@@ -238,7 +232,7 @@ public class DefaultQuestSubject implements QuestSubject {
         return serializer.deserialize(text);
     }
 
-    public static DefaultQuestSubject create(@NonNull UUID uniqueId) {
-        return new DefaultQuestSubject(uniqueId);
+    public static DefaultQuestSubject create(@NonNull UUID uniqueId, QuestProgress questProgress) {
+        return new DefaultQuestSubject(uniqueId, questProgress);
     }
 }

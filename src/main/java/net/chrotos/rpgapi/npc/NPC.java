@@ -4,24 +4,14 @@ import lombok.*;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.npc.citizens.CitizensTrait;
 import net.chrotos.rpgapi.quests.Quest;
-import net.chrotos.rpgapi.quests.QuestCriterion;
-import net.chrotos.rpgapi.selectors.LocationParameters;
-import net.chrotos.rpgapi.subjects.QuestProgress;
-import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.List;
-import java.util.function.Function;
 
 @Getter
-public class NPC implements AutoCloseable {
+public class NPC /*implements AutoCloseable*/ {
     @NonNull
     private final RPGPlugin plugin;
 
@@ -86,6 +76,8 @@ public class NPC implements AutoCloseable {
         this.citizens = citizens;
     }
 
+    // TODO make interface
+    /*
     public void spawn() {
         if (citizens == null) {
             spawnVillager();
@@ -177,12 +169,6 @@ public class NPC implements AutoCloseable {
 
         return subject.getActiveQuests().stream()
                 .anyMatch(quest -> {
-                    /*
-                    if (!quests.contains(quest)) {
-                        return false;
-                    }
-                     */
-
                     QuestProgress progress = subject.getQuestProgress().stream()
                             .filter(questProgress -> questProgress.getQuest() == quest).findFirst().orElse(null);
 
@@ -264,4 +250,5 @@ public class NPC implements AutoCloseable {
         despawnEntity();
         location.getWorld().removePluginChunkTicket(location.getChunk().getX(), location.getChunk().getZ(), plugin);
     }
+     */
 }

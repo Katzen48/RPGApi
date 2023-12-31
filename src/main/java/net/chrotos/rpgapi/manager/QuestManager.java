@@ -1,20 +1,11 @@
 package net.chrotos.rpgapi.manager;
 
-import com.google.common.collect.Maps;
 import lombok.*;
 import net.chrotos.rpgapi.RPGPlugin;
 import net.chrotos.rpgapi.datastorage.config.ConfigStorage;
-import net.chrotos.rpgapi.criteria.AdvancementDone;
-import net.chrotos.rpgapi.criteria.Checkable;
-import net.chrotos.rpgapi.criteria.Criterion;
-import net.chrotos.rpgapi.criteria.Location;
 import net.chrotos.rpgapi.datastorage.playerdata.PlayerStorage;
-import net.chrotos.rpgapi.npc.NPC;
-import net.chrotos.rpgapi.npc.NPCLoader;
 import net.chrotos.rpgapi.quests.Quest;
-import net.chrotos.rpgapi.quests.QuestGraph;
-import net.chrotos.rpgapi.quests.QuestLevel;
-import net.chrotos.rpgapi.quests.QuestStep;
+import net.chrotos.rpgapi.quests.QuestLine;
 import net.chrotos.rpgapi.subjects.DefaultQuestSubject;
 import net.chrotos.rpgapi.subjects.QuestProgress;
 import net.chrotos.rpgapi.subjects.QuestSubject;
@@ -24,19 +15,15 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.logging.Logger;
 
 public class QuestManager {
     @NonNull
     private final RPGPlugin plugin;
-    private QuestGraph questGraph;
-    private final Map<UUID, QuestSubject> subjectHashMap = Maps.newConcurrentMap();
+    private final IdentityHashMap<UUID, QuestSubject> subjectHashMap = new IdentityHashMap<>();
     @NonNull
     private final Logger logger;
     @NonNull
@@ -45,8 +32,10 @@ public class QuestManager {
     private final ConfigStorage configStorage;
     //@NonNull
     //private final NPCLoader npcLoader;
-    @Getter
-    private final List<NPC> npcs = Collections.synchronizedList(new ArrayList<>());
+    //@Getter
+    //private final List<NPC> npcs = Collections.synchronizedList(new ArrayList<>());
+    private final List<QuestLine> questLines = new ArrayList<>();
+    private final IdentityHashMap<NamespacedKey, Quest> questMap = new IdentityHashMap<>();
 
     public QuestManager(@NonNull RPGPlugin plugin) {
         this.plugin = plugin;
@@ -59,11 +48,10 @@ public class QuestManager {
     @Getter
     @Setter
     @NonNull
-    private static Function<UUID, ? extends QuestSubject> subjectProvider = DefaultQuestSubject::create;
+    private static BiFunction<UUID, QuestProgress, ? extends QuestSubject> subjectProvider = DefaultQuestSubject::create;
 
     public Quest getQuest(@NonNull NamespacedKey key) {
-        // TODO
-        return null;
+        return questMap.get(key);
     }
 
     @Synchronized
@@ -94,14 +82,18 @@ public class QuestManager {
     }
 
     @Synchronized
-    protected void removeQuestSubject(@NonNull QuestSubject questSubject) {
+    protected void removeQuestSubject(QuestSubject questSubject) {
+        if (questSubject == null) {
+            return;
+        }
+
         subjectHashMap.remove(questSubject.getUniqueId());
         CounterLock.reset(questSubject.getUniqueId());
     }
 
     @Synchronized
     public QuestSubject loadQuestSubject(@NonNull UUID uniqueId) {
-        return playerStorage.getPlayerData(uniqueId, questGraph);
+        return subjectProvider.apply(uniqueId, playerStorage.getPlayerData(uniqueId));
     }
 
     @Synchronized
@@ -112,29 +104,7 @@ public class QuestManager {
             return;
         }
 
-        playerStorage.saveSubject(questSubject);
-    }
-
-    @Synchronized
-    public QuestGraph getQuestGraph() {
-        if (questGraph == null) {
-            logger.info("Generating Quest Graph");
-            questGraph = QuestGraph.generate(loadQuests());
-
-            int levels = questGraph.getLevels().size();
-            int quests = questGraph.getLevels().stream().mapToInt(level -> level.getQuests().size()).sum();
-            int questSteps = questGraph.getLevels().stream().mapToInt(
-                            level -> level.getQuests().stream().mapToInt(quest -> quest.getSteps().size()).sum()).sum();
-            int questCriteria = questGraph.getLevels().stream().mapToInt(
-                    level -> level.getQuests().stream().mapToInt(
-                            quest -> quest.getSteps().stream().mapToInt(
-                                    step -> step.getCriteria().size()).sum()).sum()).sum();
-
-            logger.info(String.format("Quest Graph contains %d levels with %d quests with %d quest " +
-                                            "steps and %d quest criteria", levels, quests, questSteps, questCriteria));
-        }
-
-        return questGraph;
+        playerStorage.savePlayerData(questSubject.getUniqueId(), questSubject.getQuestProgress());
     }
 
     /*
@@ -153,18 +123,22 @@ public class QuestManager {
      */
 
     @Synchronized
-    public Quest loadQuest(@NonNull String id) {
-        logger.info("Loading Quest " + id);
-
-        return configStorage.getQuest(id);
-    }
-
-    @Synchronized
-    @NonNull
-    public List<Quest> loadQuests() {
+    public void loadQuests() {
         logger.info("Loading all Quests");
 
-        return configStorage.getQuests();
+        List<Quest> quests = configStorage.loadQuests();
+        ArrayList<Quest> rootQuests = new ArrayList<>();
+        quests.removeIf(quest -> {
+            if (quest.getParent() == null) {
+                rootQuests.add(quest);
+                return true;
+            }
+            return false;
+        });
+
+        rootQuests.forEach(quest -> {
+            questLines.add(QuestLine.generate(quest, quests, lineQuest -> questMap.put(lineQuest.getKey(), lineQuest)));
+        });
     }
 
     @Synchronized
@@ -173,37 +147,21 @@ public class QuestManager {
             QuestSubject subject = getQuestSubject(player.getUniqueId(), true);
             subject.setPlayer(player);
             addQuestSubject(subject);
-            final boolean initialize = subject.getLevel() != null;
-            if (subject.getLevel() == null) {
-                completeLevel(subject);
-            }
 
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                try {
-                    if (!checkAlreadyDone(subject)) {
-                        return;
-                    }
-                    //saveQuestSubject(subject.getUniqueId());
+            // TODO initialize
+            // TODO run initialization actions
 
-                    if (initialize) {
-                        subject.getActiveQuests().stream()
-                                .filter(quest -> quest.getInitializationActions() != null && !quest.getInitializationActions().isOnce())
-                                .forEach(quest -> subject.award(quest.getInitializationActions()));
-                    }
-                } catch (Throwable throwable) {
-                   player.kick(Component.text("Error whilst initializing Quests!").color(NamedTextColor.DARK_RED));
-                   throwable.printStackTrace();
-                }
-            });
         } catch (Throwable throwable) {
             Bukkit.getScheduler().runTask(plugin, () -> player.kick(
                     Component.text("Error whilst initializing Quests!")
                     .color(NamedTextColor.DARK_RED)));
 
-            throwable.printStackTrace();
+            logger.severe(throwable.toString());
         }
     }
 
+    // TODO re-implement with events
+    /*
     @Synchronized
     private boolean checkAlreadyDone(@NonNull QuestSubject subject) {
         Player player = Bukkit.getPlayer(subject.getUniqueId());
@@ -217,17 +175,19 @@ public class QuestManager {
 
         return true;
     }
+     */
 
     @Synchronized
     public void onPlayerQuit(@NonNull Player player) {
         saveQuestSubject(player.getUniqueId());
-        removeQuestSubject(getQuestSubject(player.getUniqueId(), true));
+        removeQuestSubject(getQuestSubject(player.getUniqueId()));
     }
 
-    // TODO move to quest class?
+    // TODO re-implement
+    /**
     @Synchronized
     public <T> void checkCompletance(@NonNull QuestSubject subject, @NonNull Class<? extends Checkable<T>> clazz, T object) {
-        List<Quest> quests = subject.getActiveQuests();
+        List<Quest> quests = subject.getQuestProgress().getActiveQuests();
 
         CounterLock.increment(subject.getUniqueId());
 
@@ -371,4 +331,5 @@ public class QuestManager {
             subject.setLevel(nextLevel);
         }
     }
+     **/
 }

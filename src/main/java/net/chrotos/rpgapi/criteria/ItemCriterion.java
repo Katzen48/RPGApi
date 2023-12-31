@@ -1,95 +1,55 @@
 package net.chrotos.rpgapi.criteria;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Singular;
-import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.criteria.instances.IntegerInstance;
 import net.chrotos.rpgapi.subjects.QuestSubject;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.StringJoiner;
 
 @Getter
-@SuperBuilder
-public abstract class ItemCriterion extends Criterion implements Checkable<ItemStack> {
-    /**
-     * The Display Name, of the item. All are substitutes.
-     */
+@Builder
+public abstract class ItemCriterion<T, A extends ItemCriterion<T, A>> extends SimpleCriteria<T, A> {
+
     @Singular("displayName")
     private final List<String> displayNames;
-    /**
-     * The materials, of the item. All are substitutes.
-     */
+
     @Singular("material")
     private final List<Material> materials;
 
-    @Override
-    public boolean check(@NonNull QuestSubject subject, ItemStack object) {
+    private final int customModelData;
+
+    private final int count;
+
+    public boolean check(@NonNull QuestSubject subject, @NonNull T value, @NonNull IntegerInstance<T, A> instance) {
+        ItemStack object = getItemStack(value);
+
         return (displayNames.isEmpty() || (object.hasItemMeta() && object.getItemMeta().displayName() != null &&
                         displayNames.contains(getComponentAsPlain(object.getItemMeta().displayName())))) &&
-                (materials.isEmpty() || materials.contains(object.getType()));
+                (materials.isEmpty() || materials.contains(object.getType())) &&
+                (customModelData == 0 || (object.hasItemMeta() && object.getItemMeta().hasCustomModelData() &&
+                        object.getItemMeta().getCustomModelData() == customModelData));
     }
 
     @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        ItemStack itemStack = new ItemStack(materials.size() == 1 ? materials.get(0) : Material.PLAYER_HEAD, getCount());
-        ItemMeta meta = itemStack.getItemMeta();
-
-        meta.displayName(orFetch(getGuiDisplayName(locale),
-                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
-        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
-        itemStack.setItemMeta(meta);
-
-        return itemStack;
-    }
-
-    public Integer getCount() {
-        return 1;
-    }
-
-    public List<Component> getGuiLore() {
-        List<Component> lore = new ArrayList<>();
-
-        if (materials.size() > 1) {
-            Component component = Component.text("Materials: ");
-
-            for (int i = 0; i < materials.size(); i++) {
-                if (i > 0) {
-                    component = component.append(Component.text(", "));
-                }
-
-                component = component.append(Component.translatable(materials.get(i)));
+    public void trigger(@NonNull QuestSubject subject, @NonNull T value, @NonNull CriteriaInstance<T, A> instance) {
+        if (instance instanceof IntegerInstance<T, A> integerInstance) {
+            if (check(subject, value, integerInstance)) {
+                this.completed = true;
             }
-
-            lore.add(component);
         }
-
-        if (displayNames.size() > 0) {
-            Component component = Component.text("Name: ");
-
-            for (int i = 0; i < displayNames.size(); i++) {
-                if (i > 0) {
-                    component = component.append(Component.text(", "));
-                }
-
-                component = component.append(Component.text(displayNames.get(i)));
-            }
-
-            lore.add(component);
-        }
-
-        return lore;
     }
 
-    public TranslatableComponent getGuiName() {
-        return Component.translatable("");
+    @NonNull
+    abstract ItemStack getItemStack(@NonNull T value);
+
+    protected String getComponentAsPlain(@NonNull Component component) {
+        return PlainTextComponentSerializer.plainText().serialize(component);
     }
 }

@@ -1,44 +1,27 @@
 package net.chrotos.rpgapi.criteria;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.criteria.instances.VoidInstance;
 import net.chrotos.rpgapi.selectors.LocationParameters;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.translation.GlobalTranslator;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import org.bukkit.NamespacedKey;
 
 @Getter
-@SuperBuilder
-public class Location extends Criterion implements Checkable<org.bukkit.Location> {
-    /**
-     * The name of the world. Defaults to "world"
-     */
+@Builder
+public class Location extends SimpleCriteria<org.bukkit.Location, Location> {
+    public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "location");
+
     @Builder.Default
     private final String world = "world";
-    /**
-     * The exact location (Enforced, when set)
-     */
     private final LocationParameters exact;
-    /**
-     * The min location (ignored when "exact" is set; additive to max)
-     */
     private final LocationParameters min;
-    /**
-     * The max location (ignored when "exact" is set; additive to min)
-     */
     private final LocationParameters max;
 
-    @Override
     public boolean check(@NonNull QuestSubject subject, @NonNull org.bukkit.Location object) {
         if (world != null && !object.getWorld().getName().equals(world)) {
             return false;
@@ -56,35 +39,33 @@ public class Location extends Criterion implements Checkable<org.bukkit.Location
     }
 
     @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        if (getGui() != null && getGui().getMaterial() != null) {
-            ItemStack itemStack = new ItemStack(getGuiMaterial());
+    public CriteriaInstance<org.bukkit.Location, Location> instanceFromJson(JsonObject json) {
+        return new VoidInstance<>(this);
+    }
 
-            Component displayName = getGuiDisplayName(locale);
+    @Override
+    public void trigger(@NonNull QuestSubject subject, org.bukkit.@NonNull Location value, @NonNull CriteriaInstance<org.bukkit.Location, Location> instance) {
+        if (check(subject, value)) {
+            this.completed = true;
+        }
+    }
 
-            if (displayName == null) {
-                return new ItemStack(Material.AIR);
-            }
+    public static Location create(@NonNull JsonObject json, @NonNull JsonDeserializationContext context) {
+        Location.LocationBuilder builder = builder();
 
-            ItemMeta meta = itemStack.getItemMeta();
-
-            meta.displayName(displayName);
-            meta.lore(getGuiLores(locale));
-            itemStack.setItemMeta(meta);
-
-            return itemStack;
+        if (json.has("world")) {
+            builder.world(json.get("world").getAsString());
+        }
+        if (json.has("exact")) {
+            builder.exact(context.deserialize(json.get("exact"), LocationParameters.class));
+        }
+        if (json.has("min")) {
+            builder.min(context.deserialize(json.get("min"), LocationParameters.class));
+        }
+        if (json.has("max")) {
+            builder.max(context.deserialize(json.get("max"), LocationParameters.class));
         }
 
-        return new ItemStack(Material.AIR);
-    }
-
-    @Override
-    public List<Component> getGuiLore() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public TranslatableComponent getGuiName() {
-        return null;
+        return builder.build();
     }
 }

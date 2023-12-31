@@ -1,73 +1,37 @@
 package net.chrotos.rpgapi.criteria;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.criteria.instances.VoidInstance;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
+import org.bukkit.NamespacedKey;
 
 @Getter
-@RequiredArgsConstructor
-@SuperBuilder
-public class Quest extends Criterion implements Checkable<net.chrotos.rpgapi.quests.Quest> {
-    /**
-     * The id of the quest, that has to be achieved
-     */
-    @NonNull
-    private final String id;
-    /**
-     * The object instance of the required quest
-     */
-    @Setter
-    private net.chrotos.rpgapi.quests.Quest quest;
+@Builder
+public class Quest extends SimpleCriteria<net.chrotos.rpgapi.quests.Quest, Quest> {
+    public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "quest");
 
+    private final NamespacedKey quest;
 
     @Override
-    public boolean check(@NonNull QuestSubject subject, net.chrotos.rpgapi.quests.Quest object) {
-        if (object != null) {
-            return object == quest;
+    public CriteriaInstance<net.chrotos.rpgapi.quests.Quest, Quest> instanceFromJson(JsonObject json) {
+        return new VoidInstance<>(this);
+    }
+
+    @Override
+    public void trigger(@NonNull QuestSubject subject, net.chrotos.rpgapi.quests.@NonNull Quest value, @NonNull CriteriaInstance<net.chrotos.rpgapi.quests.Quest, Quest> instance) {
+        if (value.getKey().equals(quest)) {
+            this.completed = true;
         }
-
-        return subject.getCompletedQuests().contains(quest);
     }
 
-    @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        if (getGui() != null && getGui().getMaterial() != null) {
-            ItemStack itemStack = new ItemStack(getGuiMaterial());
+    public static Quest create(@NonNull JsonObject json, @NonNull JsonDeserializationContext context) {
+        Quest.QuestBuilder builder = builder();
 
-            Component displayName = getGuiDisplayName(locale);
+        builder.quest(NamespacedKey.fromString(json.get("quest").getAsString()));
 
-            if (displayName == null) {
-                return new ItemStack(Material.AIR);
-            }
-
-            ItemMeta meta = itemStack.getItemMeta();
-
-            meta.displayName(displayName);
-            meta.lore(getGuiLores(locale));
-            itemStack.setItemMeta(meta);
-
-            return itemStack;
-        }
-
-        return new ItemStack(Material.AIR);
-    }
-
-    @Override
-    public List<Component> getGuiLore() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public TranslatableComponent getGuiName() {
-        return null;
+        return builder.build();
     }
 }

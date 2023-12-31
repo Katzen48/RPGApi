@@ -3,6 +3,7 @@ package net.chrotos.rpgapi.datastorage.backends;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.chrotos.rpgapi.RPGPlugin;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,7 +18,6 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class FileStorageBackend implements StorageBackend {
-    private static final String DEFAULT_NAMESPACE = "rpg";
     private static final String PLAYER_DATA_FOLDER_NAME = "players";
     private static final String QUEST_DATA_FOLDER_NAME = "quests";
 
@@ -114,14 +114,19 @@ public class FileStorageBackend implements StorageBackend {
     }
 
     private String getPathByKey(@NonNull NamespacedKey key) {
-        return key.getNamespace() + File.separator + key.getKey();
+        return key.getNamespace() + File.separator + key.getKey().replace('/', File.separatorChar) + ".json";
     }
 
     private NamespacedKey getKeyFromFile(@NonNull File file) {
         String relative = getQuestDataFolder().toURI().relativize(file.toURI()).getPath();
         String[] parts = relative.split(Pattern.quote(File.separator), 2);
-        String namespace = parts.length > 1 ? parts[0] : DEFAULT_NAMESPACE;
+        String namespace = parts.length > 1 ? parts[0] : RPGPlugin.DEFAULT_NAMESPACE;
+        String path = parts.length > 1 ? parts[1] : parts[0];
 
-        return new NamespacedKey(namespace, parts[1]);
+        if (path.contains(".")) {
+            path = path.substring(0, path.lastIndexOf('.'));
+        }
+
+        return new NamespacedKey(namespace, path);
     }
 }

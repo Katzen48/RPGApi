@@ -6,17 +6,8 @@ import lombok.Getter;
 @Getter
 @Builder
 public class LocationParameters {
-    /**
-     * The value for x
-     */
     private final Integer x;
-    /**
-     * The value for y
-     */
     private final Integer y;
-    /**
-     * The value for z
-     */
     private final Integer z;
 
     public boolean equal(int x, int y, int z) {

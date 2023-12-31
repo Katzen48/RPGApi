@@ -1,69 +1,98 @@
 package net.chrotos.rpgapi.criteria;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonObject;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import net.chrotos.rpgapi.RPGPlugin;
+import net.chrotos.rpgapi.criteria.instances.IntegerInstance;
+import net.chrotos.rpgapi.selectors.Location;
 import net.chrotos.rpgapi.subjects.QuestSubject;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.translation.GlobalTranslator;
-import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 @Getter
 @SuperBuilder
-public class EntityDamage extends EntityCriterion implements Checkable<EntityDamageEvent> {
-    /**
-     * The damage, to be dealt at the entity. If not set, will be one.
-     */
+public class EntityDamage extends EntityCriterion<EntityDamageEvent, EntityDamage> {
+    public static final NamespacedKey TYPE = new NamespacedKey(RPGPlugin.DEFAULT_NAMESPACE, "entity_damage");
+
     @Builder.Default
     private final Integer damage = 1;
 
     @Override
-    public boolean check(@NonNull QuestSubject subject, @NonNull EntityDamageEvent object) {
-        if (!super.check(subject, object.getEntity())) {
+    public boolean check(@NonNull QuestSubject subject, @NonNull EntityDamageEvent object, @NonNull IntegerInstance<EntityDamageEvent, EntityDamage> instance) {
+        if (!super.check(subject, object, instance)) {
             return false;
         }
 
-        return checkIntegerProgress(subject, damage, (int) object.getFinalDamage());
+        return checkIntegerProgress(subject, damage, (int) object.getFinalDamage(), instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, @NonNull IntegerInstance<EntityDamageEvent, EntityDamage> instance) {
+        return checkIntegerProgress(subject, required, value, true, instance);
+    }
+
+    protected boolean checkIntegerProgress(@NonNull QuestSubject subject, int required, int value, boolean add, @NonNull IntegerInstance<EntityDamageEvent, EntityDamage> instance) {
+        if (add) {
+            return instance.add(value) >= required;
+        } else {
+            return instance.deduct(value) >= required;
+        }
     }
 
     @Override
-    public ItemStack getGuiItemStack(Locale locale) {
-        ItemStack itemStack = new ItemStack(Material.IRON_SWORD);
-        ItemMeta meta = itemStack.getItemMeta();
+    public CriteriaInstance<EntityDamageEvent, EntityDamage> instanceFromJson(JsonObject json) {
+        IntegerInstance<EntityDamageEvent, EntityDamage> instance = new IntegerInstance<>(this);
 
-        meta.displayName(orFetch(getGuiDisplayName(locale),
-                () -> Component.text(GlobalTranslator.translator().translate(getGuiName().key(), locale).format(null))));
-        meta.lore(orFetch(getGuiLores(locale), this::getGuiLore));
-        itemStack.setItemMeta(meta);
-
-        return itemStack;
-    }
-
-    public List<Component> getGuiLore() {
-        List<Component> lore = new ArrayList<>();
-
-        if (getType() != null) {
-            lore.add(Component.text("Type: ").append(Component.translatable(getType())));
+        if (json != null && json.has("damage")) {
+            instance.add(json.get("damage").getAsInt());
         }
 
-        if (getDisplayName() != null) {
-            lore.add(Component.text("Name: " + getDisplayName()));
-        }
-
-        return lore;
+        return instance;
     }
 
-    public TranslatableComponent getGuiName() {
-        return Component.translatable("quest.criteria.entity.damage");
+    @Override
+    public void trigger(@NonNull QuestSubject subject, @NonNull EntityDamageEvent value, @NonNull CriteriaInstance<EntityDamageEvent, EntityDamage> instance) {
+        if (instance instanceof IntegerInstance<EntityDamageEvent, EntityDamage> integerInstance) {
+            if (check(subject, value, integerInstance)) {
+                this.completed = true;
+            }
+        }
+    }
+
+    @Override
+    @NonNull Entity getEntity(@NonNull EntityDamageEvent value) {
+        return value.getEntity();
+    }
+
+    public static EntityDamage create(@NonNull JsonObject json, @NonNull JsonDeserializationContext context) {
+        EntityDamage.EntityDamageBuilder<?, ?> builder = builder();
+
+        if (json.has("damage")) {
+            builder.damage(json.get("damage").getAsInt());
+        }
+
+        if (json.has("entity")) {
+            JsonObject entity = json.getAsJsonObject("entity");
+
+            if (entity.has("id")) {
+                builder.id(entity.get("id").getAsString());
+            }
+            if (entity.has("type")) {
+                builder.type(EntityType.valueOf(entity.get("type").getAsString()));
+            }
+            if (entity.has("display_name")) {
+                builder.displayName(entity.get("display_name").getAsString());
+            }
+            if (entity.has("location")) {
+                builder.location(context.deserialize(entity.get("location"), Location.class));
+            }
+        }
+
+        return builder.build();
     }
 }
